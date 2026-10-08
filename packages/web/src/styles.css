@@ -361,3 +361,64 @@ tr.dup td:first-child input {
 #print-area {
   display: none;
 }
+
+/* ---------------------------------------------------------------- print */
+.print-doc h1 {
+  font-size: 18pt;
+  margin: 0 0 4pt;
+}
+.print-doc .print-meta {
+  display: flex;
+  gap: 24pt;
+  margin: 0 0 12pt;
+  font-size: 11pt;
+}
+.print-doc ol {
+  padding-left: 28pt;
+  margin: 0;
+}
+.print-doc li {
+  font-size: 14pt;
+  min-height: 28pt;
+  border-bottom: 1px solid #999;
+  padding: 6pt 0 2pt;
+  break-inside: avoid;
+}
+.print-doc .alt {
+  font-size: 10pt;
+  color: #444;
+  margin-left: 8pt;
+}
+.print-doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12pt;
+}
+.print-doc th,
+.print-doc td {
+  border: 1px solid #999;
+  padding: 4pt 6pt;
+  text-align: left;
+}
+.print-doc .footer-note {
+  margin-top: 12pt;
+  font-size: 9pt;
+  color: #444;
+}
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  body > *:not(#print-area) {
+    display: none !important;
+  }
+  #print-area {
+    display: block;
+  }
+}

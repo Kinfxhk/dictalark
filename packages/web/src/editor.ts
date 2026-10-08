@@ -26,7 +26,8 @@ import {
 } from './app';
 import { download, fileName, h, newId } from './dom';
 import { canRecord, listVoices, playRecording, record, stopAudio } from './env';
-import { t, type StringKey } from './strings';
+import { fillList, printNow } from './print';
+import { getLocale, t, type StringKey } from './strings';
 import type { ActiveRecording } from './recorder';
 
 export const LANGS = ['en-GB', 'en-US', 'yue-HK', 'zh-TW', 'zh-Hans-CN'] as const;
@@ -36,6 +37,8 @@ export const DEFAULT_LANG: Record<Subject, string> = {
   mandarin: 'zh-TW',
   other: 'en-GB',
 };
+
+const GUIDE = 'https://github.com/Kinfxhk/dictalark/blob/main/docs/';
 
 let active: { key: string; rec: ActiveRecording } | undefined;
 
@@ -52,6 +55,18 @@ export function voiceStatus(lang: string): HTMLElement {
     { class: 'voice-status', id: 'voice-status', 'data-quality': choice.quality, role: 'status' },
     text,
     choice.remoteSkipped ? ` ${t('voice.remoteSkipped')}` : '',
+    choice.quality === 'exact'
+      ? null
+      : h(
+          'a',
+          {
+            href: `${GUIDE}${getLocale() === 'en' ? 'guide.md' : 'guide.zh-Hant.md'}`,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            class: 'voice-help',
+          },
+          ` ${t('voice.help')}`,
+        ),
   );
 }
 
@@ -219,6 +234,32 @@ export function renderEditor(view: HTMLElement, listId: string, rerender: () => 
           'a',
           { href: `#/practice/${list.id}`, class: 'file-btn', id: 'practise-link' },
           t('home.practise'),
+        ),
+        h(
+          'button',
+          {
+            type: 'button',
+            id: 'print-sheet',
+            disabled: list.items.length === 0,
+            onclick: () => {
+              fillList(list, 'sheet');
+              printNow();
+            },
+          },
+          t('print.sheet'),
+        ),
+        h(
+          'button',
+          {
+            type: 'button',
+            id: 'print-key',
+            disabled: list.items.length === 0,
+            onclick: () => {
+              fillList(list, 'key');
+              printNow();
+            },
+          },
+          t('print.key'),
         ),
         h(
           'button',

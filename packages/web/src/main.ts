@@ -30,6 +30,7 @@ import { byId, download, fileName, h, newId } from './dom';
 import { DEFAULT_LANG, renderEditor } from './editor';
 import { onVoicesChanged } from './env';
 import { renderPractice, reviewItems, stopPractice } from './practice';
+import { SAMPLE_FILES } from './samples';
 import { setLocale, t, type StringKey } from './strings';
 import './styles.css';
 
@@ -165,6 +166,34 @@ async function importFile(file: File): Promise<void> {
   route();
 }
 
+async function addSamples(): Promise<void> {
+  try {
+    const names = new Set(app.lib.lists.map((l) => l.name));
+    let lib = app.lib;
+    let added = 0;
+    for (const raw of SAMPLE_FILES) {
+      const sample = parseLibrary(raw);
+      const fresh = { ...sample, lists: sample.lists.filter((l) => !names.has(l.name)) };
+      if (fresh.lists.length === 0) continue;
+      const stamp = nowIso();
+      fresh.lists = fresh.lists.map((l) => ({ ...l, createdAt: stamp, updatedAt: stamp }));
+      lib = mergeLibrary(lib, fresh, newId);
+      added += fresh.lists.length;
+    }
+    if (added === 0) {
+      showBanner(t('home.samplesThere'));
+      return;
+    }
+    const before = app.lib;
+    app.lib = lib;
+    if (await saveLibrary()) showBanner(t('home.samplesAdded', { n: added }));
+    else app.lib = before;
+  } catch (e) {
+    showBanner(describeError(e), 'error');
+  }
+  route();
+}
+
 function renderHome(): void {
   const day = today();
   const due = new Set(dueKeys(app.lib.srs, day));
@@ -193,6 +222,11 @@ function renderHome(): void {
           t('home.new'),
         ),
         h('label', { class: 'file-btn', id: 'import-label' }, t('home.import'), fileInput),
+        h(
+          'button',
+          { type: 'button', id: 'add-samples', onclick: () => void addSamples() },
+          t('home.samples'),
+        ),
       ),
       app.lib.lists.length === 0
         ? h('p', { id: 'home-empty' }, t('home.empty'))

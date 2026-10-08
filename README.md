@@ -23,6 +23,8 @@ mistakes) is free here, with **no ads, no accounts and no tracking**.
   your browser). Dictalark makes no network requests after the page loads.
 - English and Traditional Chinese (Hong Kong) interface.
 - Licence: [AGPL-3.0-or-later](LICENSE).
+- How to use it, including how to add a Cantonese voice to your device:
+  [guide](docs/guide.md).
 
 ### Important
 
@@ -35,6 +37,9 @@ mistakes) is free here, with **no ads, no accounts and no tracking**.
   Please do not publish word lists copied from textbooks or exam papers.
 - Dictalark is an independent project and is **not affiliated** with, endorsed by
   or sponsored by any other dictation or spelling product or company.
+- Name check: no identical mark was found in the USPTO or WIPO databases; the Hong
+  Kong Intellectual Property Department search could not be checked (未能核實). See
+  [docs/NAME-CHECK.md](docs/NAME-CHECK.md).
 
 ## Commitments
 
@@ -85,6 +90,7 @@ If Dictalark helps your family, you can support it at
   任何網絡請求。
 - 提供英文及繁體中文（香港）介面。
 - 授權：[AGPL-3.0-or-later](LICENSE)。
+- 使用方法（包括如何為裝置加入粵語語音）：[使用指南](docs/guide.zh-Hant.md)。
 
 ### 重要事項
 
@@ -93,6 +99,8 @@ If Dictalark helps your family, you can support it at
 - 讀音來自你的裝置。如果裝置沒有粵語語音，可以自己錄音；程式會提示哪種語音缺少。
 - 默書雲雀只附帶少量為本項目自寫的示範詞表（CC0）。請不要公開分享從課本或試卷抄錄的詞表。
 - 默書雲雀是獨立項目，與任何其他默書或串字產品或公司**並無關連**，亦未獲其認可或贊助。
+- 名稱查核：USPTO 及 WIPO 資料庫未見相同商標；香港知識產權署的檢索未能核實。詳見
+  [docs/NAME-CHECK.md](docs/NAME-CHECK.md)。
 
 ### 承諾
 

@@ -18,6 +18,7 @@ import { app, findList, recordResults, saveSettings, showBanner, today } from '.
 import { h, newId } from './dom';
 import { voiceStatus } from './editor';
 import { createSession, readAloud, type Session, type SessionItem } from './session';
+import { fillScore, printNow } from './print';
 import { t, type StringKey } from './strings';
 
 let current: Session | undefined;
@@ -553,6 +554,26 @@ function renderResults(
         'div',
         { class: 'toolbar' },
         saveBtn,
+        h(
+          'button',
+          {
+            type: 'button',
+            id: 'print-score',
+            onclick: () => {
+              fillScore(
+                title,
+                items.map((s, i) => ({
+                  text: s.item.text,
+                  lang: s.lang,
+                  result: marks[i],
+                  ...(answers ? { answer: answers[i] ?? '' } : {}),
+                })),
+              );
+              printNow();
+            },
+          },
+          t('print.scoreBtn'),
+        ),
         h(
           'a',
           { class: 'file-btn', id: 'btn-again', href: `#/practice/${target}?again=${Date.now()}` },

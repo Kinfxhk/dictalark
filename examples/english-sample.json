@@ -1,0 +1,93 @@
+{
+  "format": "dictalark",
+  "schema": 1,
+  "exportedAt": "2026-10-08T00:00:00Z",
+  "license": "CC0-1.0",
+  "about": "Self-written sample list for Dictalark. Everyday words, not copied from any published word list. Dedicated to the public domain (CC0-1.0).",
+  "lists": [
+    {
+      "id": "sample-english",
+      "name": "Sample: around the house (English)",
+      "subject": "english",
+      "lang": "en-GB",
+      "items": [
+        {
+          "id": "w1",
+          "text": "kettle",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w2",
+          "text": "spoon",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w3",
+          "text": "window",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w4",
+          "text": "colour",
+          "accept": ["color"],
+          "note": "UK spelling; US spelling also accepted"
+        },
+        {
+          "id": "w5",
+          "text": "receive",
+          "accept": [],
+          "note": "i before e, except after c"
+        },
+        {
+          "id": "w6",
+          "text": "necessary",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w7",
+          "text": "Wednesday",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w8",
+          "text": "because",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w9",
+          "text": "friend",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w10",
+          "text": "separate",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w11",
+          "text": "The lark sings at dawn.",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w12",
+          "text": "Please close the door quietly.",
+          "accept": [],
+          "note": ""
+        }
+      ],
+      "createdAt": "2026-10-08T00:00:00Z",
+      "updatedAt": "2026-10-08T00:00:00Z"
+    }
+  ],
+  "attempts": [],
+  "srs": {}
+}

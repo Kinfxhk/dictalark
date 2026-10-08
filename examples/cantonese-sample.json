@@ -1,0 +1,81 @@
+{
+  "format": "dictalark",
+  "schema": 1,
+  "exportedAt": "2026-10-08T00:00:00Z",
+  "license": "CC0-1.0",
+  "about": "Dictalark 自寫示範詞表：日常詞語，並非抄錄自任何已出版詞表。以 CC0-1.0 公眾領域貢獻。Self-written sample list, CC0-1.0.",
+  "lists": [
+    {
+      "id": "sample-cantonese",
+      "name": "示範：日常詞語（中文・粵語）",
+      "subject": "chinese",
+      "lang": "yue-HK",
+      "items": [
+        {
+          "id": "w1",
+          "text": "默書",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w2",
+          "text": "雲雀",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w3",
+          "text": "早晨",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w4",
+          "text": "公園",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w5",
+          "text": "圖書館",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w6",
+          "text": "颱風",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w7",
+          "text": "雨傘",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w8",
+          "text": "星期日",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w9",
+          "text": "我們一起吃午飯。",
+          "accept": [],
+          "note": ""
+        },
+        {
+          "id": "w10",
+          "text": "今天天氣很好，我們到公園散步。",
+          "accept": [],
+          "note": ""
+        }
+      ],
+      "createdAt": "2026-10-08T00:00:00Z",
+      "updatedAt": "2026-10-08T00:00:00Z"
+    }
+  ],
+  "attempts": [],
+  "srs": {}
+}
