@@ -1,0 +1,11 @@
+{
+  "name": "Dictalark · 默書雲雀",
+  "short_name": "Dictalark",
+  "description": "Free, offline dictation and spelling practice. Your lists and recordings stay on your device.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#2b4c7e",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

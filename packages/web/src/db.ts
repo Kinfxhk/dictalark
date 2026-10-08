@@ -32,7 +32,7 @@ export interface Store {
   deleteRecordingsOf(listId: string): Promise<void>;
   recordingKeys(): Promise<string[]>;
   recordingBytes(): Promise<number>;
-  /** Delete everything Dictalark stored on this device. */
+  /** Delete everything Dictalark stored on this device. The store is closed afterwards. */
   wipe(): Promise<void>;
   close(): void;
 }

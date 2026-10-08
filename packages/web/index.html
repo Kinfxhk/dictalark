@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-HK" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      name="description"
+      content="Dictalark (默書雲雀): free, offline dictation and spelling practice. Your own lists and recordings stay on your device. No ads, no tracking."
+    />
+    <meta name="theme-color" content="#2b4c7e" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>Dictalark · 默書雲雀</title>
+  </head>
+  <body>
+    <a class="skip" href="#view" data-t="app.skip">Skip to content</a>
+    <header class="top">
+      <a class="brand" href="#/">
+        <img src="./icon.svg" alt="" width="40" height="40" />
+        <span>
+          <span class="brand-name">Dictalark · 默書雲雀</span>
+          <span class="tagline" data-t="app.tagline">Free, offline dictation practice.</span>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="#/" id="nav-home" data-t="nav.home">My lists</a>
+        <a href="#/review" id="nav-review">Review</a>
+      </nav>
+      <div class="settings">
+        <label
+          ><span data-t="settings.lang">Language</span>
+          <select id="set-lang">
+            <option value="zh-HK">繁體中文</option>
+            <option value="en">English</option>
+          </select></label
+        >
+        <label
+          ><span data-t="settings.theme">Theme</span>
+          <select id="set-theme">
+            <option value="light" data-t="settings.light">Light</option>
+            <option value="dark" data-t="settings.dark">Dark</option>
+          </select></label
+        >
+        <label class="check"
+          ><input type="checkbox" id="set-large" />
+          <span data-t="settings.large">Large text</span></label
+        >
+        <label class="check" id="remote-label"
+          ><input type="checkbox" id="set-remote" />
+          <span data-t="settings.remote">Allow online voices</span></label
+        >
+      </div>
+    </header>
+    <div id="banner" class="banner" role="status" aria-live="polite"></div>
+    <main id="view" tabindex="-1"></main>
+    <footer class="bottom">
+      <p data-t="footer.privacy">Your data stays on this device.</p>
+      <p data-t="footer.marking">Automatic marking is only a guide.</p>
+      <p data-t="footer.affiliation">Independent project.</p>
+      <p>
+        <a id="source-link" href="https://github.com/Kinfxhk/dictalark" data-t="footer.source"
+          >Source code</a
+        >
+        · <span id="app-version">v0.0.0</span> ·
+        <a href="https://www.gnu.org/licenses/agpl-3.0.html" data-t="footer.licence"
+          >Licence: AGPL-3.0-or-later</a
+        >
+        (<a href="./licenses/Dictalark-LICENSE.txt">LICENSE</a>) ·
+        <a href="https://buymeacoffee.com/kinfxhk" data-t="footer.coffee">Buy me a coffee</a>
+      </p>
+    </footer>
+    <div id="print-area"></div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

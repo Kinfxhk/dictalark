@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Dictalark">
+  <!-- Original icon for Dictalark: a small lark sitting on a ruled line. CC0-1.0. -->
+  <rect width="64" height="64" rx="14" fill="#2b4c7e"/>
+  <path d="M10 48h44" stroke="#f6f7fb" stroke-width="3" stroke-linecap="round"/>
+  <path d="M10 54h30" stroke="#9fb6d9" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="30" cy="34" rx="13" ry="9" fill="#f2c14e"/>
+  <circle cx="42" cy="26" r="7" fill="#f2c14e"/>
+  <path d="M48 25l7 2-7 2z" fill="#e07a2f"/>
+  <circle cx="44" cy="24.5" r="1.6" fill="#1b2a41"/>
+  <path d="M18 33c-6-1-9-5-10-9 5 2 9 2 13 4z" fill="#d9a73a"/>
+  <path d="M26 33c3 4 8 5 12 3" stroke="#b8862b" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M28 43v5M34 43v5" stroke="#1b2a41" stroke-width="2" stroke-linecap="round"/>
+</svg>

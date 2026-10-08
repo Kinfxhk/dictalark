@@ -6,6 +6,7 @@ import {
   errorMessage,
   findDuplicates,
   LIMITS,
+  mergeLibrary,
   migrate,
   parseLibrary,
   safeJsonParse,
@@ -228,5 +229,67 @@ describe('error messages', () => {
       expect(errorMessage(e, 'zh-HK'), c).toMatch(/[\u4e00-\u9fff]/);
       expect(m.en).not.toBe(m['zh-HK']);
     }
+  });
+});
+
+describe('mergeLibrary (importing a backup)', () => {
+  const ids = (prefix: string) => {
+    let n = 0;
+    return () => `${prefix}${++n}`;
+  };
+
+  it('adds lists without touching existing ones', () => {
+    const base = library();
+    const incoming = library({
+      lists: [list({ id: 'other', name: 'Other' })],
+      attempts: [],
+      srs: { 'other/i1': { box: 3, due: '2026-10-11' } },
+    });
+    const out = mergeLibrary(base, incoming, ids('n'));
+    expect(out.lists.map((l) => l.id)).toEqual(['list-1', 'other']);
+    expect(out.srs['other/i1']).toEqual({ box: 3, due: '2026-10-11' });
+    expect(out.srs['list-1/i2']).toEqual(base.srs['list-1/i2']);
+  });
+
+  it('re-ids a colliding list and moves its attempts and review cards with it', () => {
+    const base = library();
+    const incoming = library({ srs: { 'list-1/i1': { box: 4, due: '2026-10-20' } } });
+    const out = mergeLibrary(base, incoming, ids('fresh'));
+    expect(out.lists.map((l) => l.id)).toEqual(['list-1', 'fresh1']);
+    // The existing schedule is not overwritten by the import.
+    expect(out.srs['list-1/i2']).toEqual({ box: 1, due: '2026-10-08' });
+    expect(out.srs['list-1/i1']).toBeUndefined();
+    expect(out.srs['fresh1/i1']).toEqual({ box: 4, due: '2026-10-20' });
+    expect(out.attempts.map((a) => [a.id, a.listId])).toEqual([
+      ['a1', 'list-1'],
+      ['fresh2', 'fresh1'],
+    ]);
+    // The inputs are not mutated.
+    expect(base.lists).toHaveLength(1);
+    expect(incoming.lists[0]!.id).toBe('list-1');
+  });
+
+  it('skips ids that are already taken when making new ones', () => {
+    const base = library({ lists: [list(), list({ id: 'n1' })] });
+    const out = mergeLibrary(base, library({ attempts: [], srs: {} }), ids('n'));
+    expect(out.lists.map((l) => l.id)).toEqual(['list-1', 'n1', 'n2']);
+  });
+
+  it('drops orphan attempts and review cards from the import', () => {
+    const incoming = library({
+      lists: [list({ id: 'x' })],
+      attempts: [{ id: 'z', listId: 'ghost', day: '2026-10-08', mode: 'paper', entries: [] }],
+      srs: { 'ghost/i1': { box: 2, due: '2026-10-09' } },
+    });
+    const out = mergeLibrary(library({ lists: [], attempts: [], srs: {} }), incoming, ids('n'));
+    expect(out.attempts).toEqual([]);
+    expect(out.srs).toEqual({});
+  });
+
+  it('refuses to go over the list limit', () => {
+    const many = Array.from({ length: LIMITS.lists }, (_, i) => list({ id: `l${i}` }));
+    expect(() =>
+      mergeLibrary(library({ lists: many, attempts: [], srs: {} }), library(), ids('n')),
+    ).toThrow(DictalarkError);
   });
 });

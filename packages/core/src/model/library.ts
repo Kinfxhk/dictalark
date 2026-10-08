@@ -70,3 +70,43 @@ export function parseLibrary(text: string): Library & { exportedAt: string } {
     srs: validateSrs(data.srs ?? {}),
   };
 }
+
+/**
+ * Add an imported library to the existing one. Lists, attempts and review cards from the
+ * import are kept; an imported list whose id is already used gets a fresh id (and its
+ * attempts and review cards follow it), so nothing on the device is overwritten.
+ */
+export function mergeLibrary(base: Library, incoming: Library, newId: () => string): Library {
+  if (base.lists.length + incoming.lists.length > LIMITS.lists)
+    throw new DictalarkError('too-many-lists', { max: LIMITS.lists });
+  const used = new Set(base.lists.map((l) => l.id));
+  const usedAttempts = new Set(base.attempts.map((a) => a.id));
+  const fresh = (taken: Set<string>) => {
+    for (let i = 0; i < 100; i++) {
+      const id = newId();
+      if (!taken.has(id)) return id;
+    }
+    throw new Error('could not make a unique id');
+  };
+  const rename = new Map<string, string>();
+  const lists = incoming.lists.map((l) => {
+    const id = used.has(l.id) ? fresh(used) : l.id;
+    used.add(id);
+    rename.set(l.id, id);
+    return { ...l, id, items: l.items.map((it) => ({ ...it, accept: [...it.accept] })) };
+  });
+  const attempts = incoming.attempts
+    .filter((a) => rename.has(a.listId))
+    .map((a) => {
+      const id = usedAttempts.has(a.id) ? fresh(usedAttempts) : a.id;
+      usedAttempts.add(id);
+      return { ...a, id, listId: rename.get(a.listId)!, entries: a.entries.map((e) => ({ ...e })) };
+    });
+  const srs = { ...base.srs };
+  for (const [key, card] of Object.entries(incoming.srs)) {
+    const slash = key.indexOf('/');
+    const to = rename.get(key.slice(0, slash));
+    if (slash > 0 && to) srs[`${to}${key.slice(slash)}`] = { ...card };
+  }
+  return { lists: [...base.lists, ...lists], attempts: [...base.attempts, ...attempts], srs };
+}
