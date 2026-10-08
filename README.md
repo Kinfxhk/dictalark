@@ -1,11 +1,5 @@
 # Dictalark · 默書雲雀
 
-> **In development.** Dictalark v0.1 is being built in the open. Nothing is released
-> yet; the first release will be announced on the
-> [releases page](https://github.com/Kinfxhk/dictalark/releases).
->
-> **開發中。** 默書雲雀 v0.1 正在公開開發，尚未發佈。
-
 **English** · [繁體中文](#繁體中文)
 
 Dictalark is a free, open-source, offline dictation and spelling practice tool for
