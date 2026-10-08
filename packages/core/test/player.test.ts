@@ -55,8 +55,27 @@ describe('player (examples)', () => {
     const r = drive(['a', 'b'], c);
     expect(r.spoken).toEqual(['a#1', 'a#2', 'a#3', 'b#1', 'b#2', 'b#3']);
     expect(r.silent).toBe(silentMs(2, c));
-    expect(r.silent).toBe(3000 + 2 * 2 * 2000 + 5000);
+    // the last word gets its writing time too (v0.3)
+    expect(r.silent).toBe(3000 + 2 * 2 * 2000 + 2 * 5000);
     expect(r.s.phase).toBe('done');
+  });
+  it('after the last reading it waits the pause between words; "next" ends it at once', () => {
+    const c = cfg({ repeats: 1, gapSeconds: 0, itemGapSeconds: 5, countdownSeconds: 0 });
+    let r = step(initialState(['a']), { type: 'start' }, c);
+    r = step(r.state, { type: 'spoken' }, c);
+    expect(r.state.phase).toBe('waiting');
+    expect(r.state.remainingMs).toBe(5000);
+    expect(r.effects).toEqual([]);
+    const next = step(r.state, { type: 'next' }, c);
+    expect(next.state.phase).toBe('done');
+    expect(next.effects).toEqual([{ type: 'done' }]);
+    const zero = cfg({ repeats: 1, gapSeconds: 0, itemGapSeconds: 0, countdownSeconds: 0 });
+    const z = step(
+      step(initialState(['a']), { type: 'start' }, zero).state,
+      { type: 'spoken' },
+      zero,
+    );
+    expect(z.state.phase).toBe('done');
   });
   it('0 items: start finishes at once', () => {
     expect(runAll([], cfg(), [{ type: 'start' }]).log).toEqual([{ type: 'done' }]);

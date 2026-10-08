@@ -3,8 +3,8 @@
 Dictalark is licensed under AGPL-3.0-or-later. The core (`packages/core`) and the
 browser UI (`packages/web`) have **no third-party runtime dependencies**: the word-list
 model, CSV/JSON reader and writer, answer normalisation, grapheme diff and its
-independent checker, spaced repetition, shuffle, dictation player and the UI are
-original code written for this project. Speech comes from the Web Speech API and
+independent checker, spaced repetition, shuffle, dictation player, QR code encoder, class pack and results
+files and the UI are original code written for this project. Speech comes from the Web Speech API and
 recording from MediaRecorder, both built into your browser; grapheme splitting uses
 `Intl.Segmenter`.
 
@@ -15,7 +15,9 @@ unknown or malformed licence expressions).
 ## Development-only tools (not shipped)
 
 Vite, Vitest, fast-check, Playwright, axe-core (`@axe-core/playwright`, MPL-2.0),
-ESLint, Prettier, TypeScript and tsx are used only to build and test Dictalark.
+jsQR (Apache-2.0, used only to read back test QR codes), ESLint, Prettier, TypeScript and
+tsx are used only to build and test Dictalark. The Python oracle (`tools/oracle/`) uses
+only the Python standard library.
 MPL-2.0 is accepted for development tooling only.
 
 ## Code of Conduct

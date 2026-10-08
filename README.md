@@ -22,6 +22,10 @@ mistakes) is free here, with **no ads, no accounts and no tracking**.
   punctuation marks, a voices page to try and choose voices, share a list as a link
   (no server), and the browser is asked to keep Dictalark's storage, with a gentle
   backup reminder.
+- **New in v0.3:** a QR code for share links (made on the device), and class lists by
+  file: teachers send a class pack, pupils open it (later packs update their copies) and
+  send back a results file (counts only, never what they typed); teachers open many
+  results files for a summary and a CSV. No accounts, no server.
 - Licence: [AGPL-3.0-or-later](LICENSE).
 - How to use it, including how to add a Cantonese voice to your device:
   [guide](docs/guide.md).
@@ -110,6 +114,8 @@ If Dictalark helps your family, you can support it at
 - **v0.2 新功能：**每個詞語可設「讀出文字」（解決裝置語音讀錯多音字）、備份包括錄音、可以由任何一項開始，
   停止後可以繼續、段落模式（按標點分句）及自訂標點讀法、語音試聽頁、以連結分享詞表（不經伺服器），
   並會要求瀏覽器保留資料，加上溫和的備份提示。
+- **v0.3 新功能：**分享連結附 QR 碼（在裝置上產生）；用檔案派發詞表：老師儲存詞表包，學生開啟（之後再派會更新），
+  再交回成績檔（只有數目，永不包括輸入內容）；老師一次開啟多個成績檔，即有摘要及 CSV。無需帳戶，亦無伺服器。
 - 授權：[AGPL-3.0-or-later](LICENSE)。
 - 使用方法（包括如何為裝置加入粵語語音）：[使用指南](docs/guide.zh-Hant.md)。
 

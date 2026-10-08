@@ -122,7 +122,7 @@ export function step(s: PlayerState, e: PlayerEvent, cfg: PlayerConfig): Step {
       if (s.phase !== 'speaking') return same; // late or duplicate "end" from the voice
       const done = { ...s, readings: s.readings + 1 };
       if (done.readings < cfg.repeats) return wait(done, cfg, cfg.gapSeconds * 1000);
-      if (s.index + 1 >= s.order.length) return finish(done);
+      // The last word gets its writing time too (v0.3); "next" or Enter ends it early.
       return wait(done, cfg, cfg.itemGapSeconds * 1000);
     }
     case 'tick': {
@@ -181,6 +181,6 @@ export function silentMs(n: number, cfg: PlayerConfig): number {
   return (
     cfg.countdownSeconds * 1000 +
     n * (cfg.repeats - 1) * cfg.gapSeconds * 1000 +
-    (n - 1) * cfg.itemGapSeconds * 1000
+    n * cfg.itemGapSeconds * 1000
   );
 }

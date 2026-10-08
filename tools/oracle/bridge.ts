@@ -9,6 +9,13 @@ import {
   addDays,
   align,
   below,
+  dataCodewords,
+  makeResults,
+  summariseResults,
+  type ClassResults,
+  type Library,
+  qrDataCodewords,
+  reedSolomon,
   prng,
   daysBetween,
   dueKeys,
@@ -36,6 +43,10 @@ interface Cases {
   local: { ms: number; zone: string }[];
   shuffle: { n: number; seed: number }[];
   below: { n: number; seed: number; count: number }[];
+  rs: { data: number[]; ec: number }[];
+  summary: ClassResults[][];
+  results: { lib: Library; ids: string[] }[];
+  qrdata: { text: string; v: number; ecc: 'L' | 'M' | 'Q' | 'H' }[];
 }
 
 function readStdin(): Promise<string> {
@@ -82,5 +93,14 @@ const out = {
     const next = prng(x.seed);
     return Array.from({ length: x.count }, () => below(next, x.n));
   }),
+  rs: c.rs.map((x) => reedSolomon(x.data, x.ec)),
+  summary: c.summary.map((files) => safe(() => summariseResults(files))),
+  results: c.results.map((x) =>
+    safe(() => makeResults(x.lib, x.ids, 'Pupil', '2026-10-08T00:00:00Z')),
+  ),
+  qrdata: c.qrdata.map((x) => ({
+    cap: dataCodewords(x.v, x.ecc),
+    out: safe(() => qrDataCodewords(x.text, x.v, x.ecc)),
+  })),
 };
 process.stdout.write(JSON.stringify(out));

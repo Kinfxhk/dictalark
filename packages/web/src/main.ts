@@ -33,6 +33,7 @@ import { byId, download, fileName, h, newId } from './dom';
 import { DEFAULT_LANG, renderEditor } from './editor';
 import { onVoicesChanged } from './env';
 import { ensurePersisted, noteBackup, readBackupState, reminderDue, snooze } from './storage-guard';
+import { renderClass } from './class-page';
 import { renderVoices } from './voices-page';
 import { renderPractice, reviewItems, stopPractice } from './practice';
 import { SAMPLE_FILES } from './samples';
@@ -572,6 +573,7 @@ function route(): void {
   if (page === 'list' && id) renderEditor(view, id, route);
   else if (page === 'share' && id) renderShare(id);
   else if (page === 'voices') renderVoices(view);
+  else if (page === 'class') renderClass(view);
   else if (page === 'practice' && id) {
     // Re-render the set-up screen only on navigation, never mid-dictation.
     if (changed || location.hash.includes('?')) renderPractice(view, id);

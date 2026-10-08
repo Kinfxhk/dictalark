@@ -433,6 +433,19 @@ tr.dup td:first-child input {
 .share-url {
   width: 100%;
 }
+.share-qr:not(:empty) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.share-qr img {
+  width: min(240px, 100%);
+  height: auto;
+  image-rendering: pixelated;
+  background: #fff;
+}
 #persist-status[data-status='not-persisted'],
 #persist-status[data-status='unsupported'] {
   font-weight: 600;

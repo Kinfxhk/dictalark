@@ -6,19 +6,46 @@ All notable changes to Dictalark are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-08
+
+Optional extras from what users of other dictation apps ask for (P2). 根據用戶需要再加的功能。
+
 ### Added
 
+- **QR code for share links**, drawn on this device by Dictalark's own encoder (byte
+  mode, versions 1–40, error correction M, falling back to L for long links), with
+  **Save QR code (.svg)** for printing. Lists too long for a QR code get a note instead.
+  Every test symbol is read back by an independent decoder (jsQR, a test-only
+  dependency); 14 deliberately broken encoders are all caught.
+- **Class lists by file** (Class page): teachers save a **class pack**; pupils open it
+  with a preview (new / updated / already up to date), and a later pack updates their
+  copies instead of doubling them; pupils save a **results file** (counts per practice
+  and how often each word was missed, never what they typed); teachers open many results
+  files for a summary per list (tries, best, latest, all right last time, most missed
+  words) and a CSV. No accounts, no server. Results files can be edited by pupils, so the
+  page says they are for practice feedback, not for marks.
 - **Independent Python oracle** (`tools/oracle/oracle.py`, standard library only, run by
   `npm run oracle` and in CI on Linux and Windows): many thousands of random cases for
-  answer marking (typing rules, accepted answers), word alignment (its own
-  Damerau/OSA distance and a rebuild of both strings from the steps), review-box days,
-  calendar arithmetic (days outside 2000–2999 must be refused), local day in a time zone,
-  the due list order, and the seeded shuffle, compared with what the app computes.
-  12 deliberately broken versions of the app code were all caught.
+  answer marking (typing rules, accepted answers), word alignment (its own Damerau/OSA
+  distance and a rebuild of both strings from the steps), review-box days, calendar
+  arithmetic (days outside 2000–2999 must be refused), local day in a time zone, the due
+  list order, the seeded shuffle, QR Reed–Solomon error correction and data codewords,
+  and the class results summary, compared with what the app computes.
 
 ### Changed
 
-- The README screenshot is now taken from the live v0.2.0 site.
+- **The last word now gets its writing time too**: after its last reading, Dictalark
+  waits the "pause between words" before showing the results, as it does for every other
+  word (before, the results appeared at once, so the last word could not be written or
+  typed after hearing it). **Next**, or Enter when typing, finishes sooner.
+- The README screenshot is now taken from the live site.
+
+### Not done (with reasons)
+
+- **Reading words from a photo (OCR)** stays deferred: it is a large piece of work and
+  needs a model whose code, weights and training data all have clear licences compatible
+  with the AGPL, downloaded only on request and never uploading pictures. No such model
+  has been checked yet.
 
 ## [0.2.0] - 2026-10-08
 

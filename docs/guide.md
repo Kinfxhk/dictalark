@@ -37,6 +37,35 @@ send to a server), for example to send to another parent. Opening the link shows
 list first; it is only added when you press **Add to my lists**. Recordings and results
 are not included. Very long lists may be too long for a link; use a CSV file instead.
 
+A **QR code** of the link appears below it, made on this device. Scan it with a phone
+camera to open the list there, or press **Save QR code (.svg)** to print it (for example
+on a worksheet). Long lists make dense codes; very long lists cannot become a QR code,
+and Dictalark says so.
+
+## Class lists by file (teachers and pupils)
+
+The **Class** page sends lists to a whole class and collects results, using files only:
+no accounts and no server. Send the files the way your school already does (email, the
+school platform, a USB stick).
+
+- **Teachers: send lists.** Tick the lists, give the pack a title (and a note if you
+  like) and press **Save class pack (.json)**. Recordings and results are not included.
+  If you correct a list and send it again, pupils' copies are **updated**, not doubled.
+- **Pupils: open a class pack.** Dictalark first shows which lists are new, which will
+  be updated and which are already up to date; nothing changes until you press **Add and
+  update these lists**. Your practice history is kept.
+- **Pupils: send results.** Tick the lists, type your name and press **Save results file
+  (.json)**. The file holds how many answers were right, wrong or blank in each practice
+  and how often each word was missed. **What you typed is never included.**
+- **Teachers: read results.** Open many results files at once. For each list you see
+  each pupil's number of tries, best and latest score, how many pupils had every word
+  right last time, and the words missed by most pupils. If one pupil sent two files, the
+  newer one is used. **Save summary (.csv)** opens in a spreadsheet. The summary is not
+  saved anywhere.
+
+Results files are made on pupils' devices and can be edited, so use them to see which
+words need more practice, not for marks.
+
 ## 2. Practise
 
 Open a list and press **Practise**. Choose how:
@@ -51,7 +80,9 @@ Open a list and press **Practise**. Choose how:
   (羣 is not 群).
 - **Flash cards**: read aloud, reveal, and mark yourself.
 
-Settings: readings per word, the pause between readings and between words, a countdown,
+Settings: readings per word, the pause between readings and between words (the last
+word gets this pause too, so it can be written down; press **Next**, or Enter when
+typing, to finish sooner), a countdown,
 speed, shuffle (the same shuffle number gives the same order again), **start from item**,
 hide the words while reading, and read punctuation aloud. During a dictation you can
 pause, go back, read again, skip or finish. If you finish early, the results page offers

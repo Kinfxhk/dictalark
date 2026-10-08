@@ -3,10 +3,12 @@
 // the parent's own recordings (stored only in this browser).
 
 import {
+  encodeQr,
   encodeShare,
   findDuplicates,
   LIMITS,
   listToCsv,
+  qrToSvg,
   SUBJECTS,
   validateLang,
   validateText,
@@ -310,6 +312,7 @@ export function renderEditor(view: HTMLElement, listId: string, rerender: () => 
           h('input', { type: 'text', id: 'share-url', readonly: true, class: 'share-url' }),
         ),
         h('span', { class: 'note' }, t('share.note')),
+        h('span', { id: 'share-qr', class: 'share-qr' }),
       ),
     ),
   );
@@ -525,9 +528,48 @@ async function shareList(list: WordList): Promise<void> {
     } catch {
       showBanner(t('share.copyYourself'));
     }
+    showQr(list, url);
     document.getElementById('share-out')?.removeAttribute('hidden');
     box?.select();
   } catch (e) {
     showBanner(describeError(e), 'error');
   }
+}
+
+/** A QR code of the share link, drawn on this device; too-long links get a note instead. */
+function showQr(list: WordList, url: string): void {
+  const slot = document.getElementById('share-qr');
+  if (!slot) return;
+  let svg: string;
+  let version: number;
+  try {
+    const qr = encodeQr(url);
+    version = qr.version;
+    svg = qrToSvg(qr, 4, t('share.qrAlt', { name: list.name }));
+  } catch {
+    slot.replaceChildren(
+      h('span', { class: 'note', id: 'share-qr-too-long' }, t('share.qrTooLong')),
+    );
+    return;
+  }
+  slot.replaceChildren(
+    h('img', {
+      id: 'share-qr-img',
+      src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`,
+      alt: t('share.qrAlt', { name: list.name }),
+      'data-version': String(version),
+      width: '240',
+      height: '240',
+    }),
+    h('span', { class: 'note' }, version > 15 ? t('share.qrDense') : t('share.qrHelp')),
+    h(
+      'button',
+      {
+        type: 'button',
+        id: 'share-qr-save',
+        onclick: () => download(fileName(list.name, 'svg'), svg, 'image/svg+xml'),
+      },
+      t('share.qrSave'),
+    ),
+  );
 }

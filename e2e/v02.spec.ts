@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // v0.2: "read as" text, start from item N / continue, stop mid-reading, passage mode,
 // punctuation names, chosen voices, share links, storage status and backup reminder.
+import jsQR from 'jsqr';
 import { expect, test, type Page } from '@playwright/test';
 import { fakeSpeech, fastSettings, makeList, open, spoken, watch } from './helpers';
 
@@ -178,6 +179,26 @@ test('share link: the list travels in the link, is previewed and added only on r
   await page.locator('#share-btn').click();
   const url = await page.locator('#share-url').inputValue();
   expect(url).toMatch(/#\/share\/[A-Za-z0-9_-]+$/);
+  // The QR code is drawn on this device and decodes (independent decoder) to the link.
+  const img = page.locator('#share-qr-img');
+  await expect(img).toBeVisible();
+  const pixels = await img.evaluate(async (el: HTMLImageElement) => {
+    await el.decode();
+    const side = 600;
+    const c = document.createElement('canvas');
+    c.width = c.height = side;
+    const g = c.getContext('2d')!;
+    g.imageSmoothingEnabled = false;
+    g.drawImage(el, 0, 0, side, side);
+    return { side, data: Array.from(g.getImageData(0, 0, side, side).data) };
+  });
+  const read = jsQR(new Uint8ClampedArray(pixels.data), pixels.side, pixels.side);
+  expect(read?.data).toBe(url);
+  const [svgFile] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#share-qr-save').click(),
+  ]);
+  expect(svgFile.suggestedFilename()).toMatch(/\.svg$/);
   // Open the link in a fresh browser profile: nothing is stored until "Add".
   const other = await (await context.browser()!.newContext()).newPage();
   const w2 = watch(other, baseURL!);

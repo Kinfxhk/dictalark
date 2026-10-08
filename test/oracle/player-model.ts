@@ -72,7 +72,6 @@ export class ReferencePlayer {
       if (this.phase !== 'speaking') return;
       this.readings++;
       const lastReading = this.readings >= this.cfg.repeats;
-      if (lastReading && this.index === this.order.length - 1) return this.end();
       const pause = (lastReading ? this.cfg.itemGapSeconds : this.cfg.gapSeconds) * 1000;
       if (pause === 0) return this.continueAfterWait();
       this.phase = 'waiting';

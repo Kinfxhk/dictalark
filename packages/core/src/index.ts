@@ -11,3 +11,4 @@ export * from './srs/index';
 export * from './shuffle/index';
 export * from './player/index';
 export * from './speech/index';
+export * from './qr/index';

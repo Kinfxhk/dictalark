@@ -9,3 +9,4 @@ export * from './library';
 export * from './duplicates';
 export * from './base64';
 export * from './share';
+export * from './classroom';

@@ -28,6 +28,8 @@ import random
 import re
 import subprocess
 import sys
+import unicodedata
+from fractions import Fraction
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -225,6 +227,172 @@ def shuffle(n, seed):
     return out
 
 
+# ---- QR code: Reed–Solomon over GF(256) with log/antilog tables, and the data bit stream ----
+GF_EXP = [0] * 512
+GF_LOG = [0] * 256
+_x = 1
+for _i in range(255):
+    GF_EXP[_i] = _x
+    GF_LOG[_x] = _i
+    _x <<= 1
+    if _x & 0x100:
+        _x ^= 0x11D
+for _i in range(255, 512):
+    GF_EXP[_i] = GF_EXP[_i - 255]
+
+
+def gf_mul(a, b):
+    return 0 if a == 0 or b == 0 else GF_EXP[GF_LOG[a] + GF_LOG[b]]
+
+
+def rs_remainder(data, n):
+    """Generator = (x - a^0)(x - a^1)...(x - a^(n-1)); remainder of data*x^n by long division."""
+    gen = [1]
+    for i in range(n):
+        nxt = [0] * (len(gen) + 1)
+        for j, c in enumerate(gen):
+            nxt[j] ^= c
+            nxt[j + 1] ^= gf_mul(c, GF_EXP[i])
+        gen = nxt
+    msg = list(data) + [0] * n
+    for i in range(len(data)):
+        coef = msg[i]
+        if coef:
+            for j in range(1, len(gen)):
+                msg[i + j] ^= gf_mul(gen[j], coef)
+    return msg[len(data):]
+
+
+def qr_data(text, version, capacity):
+    raw = text.encode("utf-8")
+    bits = "0100" + format(len(raw), "08b" if version <= 9 else "016b")
+    bits += "".join(format(b, "08b") for b in raw)
+    if len(bits) > capacity * 8:
+        return None
+    bits += "0" * min(4, capacity * 8 - len(bits))
+    bits += "0" * (-len(bits) % 8)
+    out = [int(bits[i:i + 8], 2) for i in range(0, len(bits), 8)]
+    pads = [0xEC, 0x11]
+    while len(out) < capacity:
+        out.append(pads[(len(out) - len(bits) // 8) % 2])
+    return out
+
+
+# ---- class results files: counts, best / last try, missed words ----
+def summarise(files):
+    """Newest file per pupil (case/space-insensitive name); exact comparisons with Fraction."""
+    def key(name):
+        return unicodedata.normalize("NFC", name).strip().lower()
+    latest = {}
+    for f in files:
+        k = key(f["pupil"])
+        if k not in latest or f["madeAt"] >= latest[k]["madeAt"]:
+            latest[k] = f
+    chosen = [latest[k] for k in sorted(latest, key=lambda k: k.encode("utf-16-be"))]
+    order, names = [], {}
+    for f in chosen:
+        for lst in f["lists"]:
+            if lst["listId"] not in names:
+                names[lst["listId"]] = lst["name"]
+                order.append(lst["listId"])
+    out = []
+    for lid in order:
+        rows, missed = [], {}
+        for f in chosen:
+            lst = next((x for x in f["lists"] if x["listId"] == lid), None)
+            atts = lst["attempts"] if lst else []
+            best = last = None
+            for i, a in enumerate(atts):
+                tot = a["right"] + a["wrong"] + a["blank"]
+                share = Fraction(a["right"], tot)
+                if best is None or share > best[0]:
+                    best = (share, a["right"], tot)
+                if last is None or a["day"] >= last[0]:
+                    last = (a["day"], a["right"], tot)
+            rows.append({"pupil": f["pupil"], "tries": len(atts),
+                         "best": None if best is None else {"right": best[1], "total": best[2]},
+                         "last": None if last is None else {"day": last[0], "right": last[1], "total": last[2]}})
+            for m in (lst["missed"] if lst else []):
+                if m["times"] == 0:
+                    continue
+                text = next(i["text"] for i in lst["items"] if i["id"] == m["itemId"])
+                w = missed.setdefault(text, {"text": text, "pupils": 0, "times": 0})
+                w["pupils"] += 1
+                w["times"] += m["times"]
+        ranked = sorted(missed.values(), key=lambda w: (-w["pupils"], -w["times"], w["text"].encode("utf-16-be")))
+        out.append({"listId": lid, "name": names[lid], "rows": rows,
+                    "tried": sum(1 for r in rows if r["tries"] > 0),
+                    "allRight": sum(1 for r in rows if r["last"] and r["last"]["right"] == r["last"]["total"]),
+                    "missed": ranked})
+    return {"pupils": [f["pupil"] for f in chosen], "replaced": len(files) - len(chosen), "lists": out}
+
+
+def results_of(lib, ids):
+    out = []
+    for lid in ids:
+        lst = next(x for x in lib["lists"] if x["id"] == lid)
+        item_ids = {i["id"] for i in lst["items"]}
+        missed = {}
+        atts = []
+        for a in lib["attempts"]:
+            if a["listId"] != lid or not a["entries"]:
+                continue
+            n = {"right": 0, "wrong": 0, "blank": 0}
+            for e in a["entries"]:
+                n[e["result"]] += 1
+                if e["result"] != "right" and e["itemId"] in item_ids:
+                    missed[e["itemId"]] = missed.get(e["itemId"], 0) + 1
+            atts.append({"day": a["day"], "mode": a["mode"], **n})
+        out.append({"listId": lid, "name": lst["name"],
+                    "items": [{"id": i["id"], "text": i["text"]} for i in lst["items"]],
+                    "attempts": atts,
+                    "missed": [{"itemId": i["id"], "times": missed[i["id"]]} for i in lst["items"] if i["id"] in missed]})
+    return out
+
+
+def rand_results_files(rng):
+    words = ["spoon", "colour", "茶壺", "Apple", "apple", "默書", "Zebra", "é", "e\u0301"]
+    pupils = ["Amy", "amy ", "Ben", "陳大文", "Ｃat", "AMY", "Dan"]
+    lists = []
+    for k in range(rng.randint(1, 3)):
+        items = [{"id": f"i{j}", "text": w} for j, w in enumerate(rng.sample(words, rng.randint(1, len(words))))]
+        lists.append({"listId": f"L{k}", "name": f"List {k}", "items": items})
+    files = []
+    for _ in range(rng.randint(0, 8)):
+        f_lists = []
+        for lst in rng.sample(lists, rng.randint(0, len(lists))):
+            atts = []
+            for _ in range(rng.randint(0, 5)):
+                tot = rng.randint(1, 6)
+                r = rng.randint(0, tot)
+                w = rng.randint(0, tot - r)
+                atts.append({"day": f"2026-{rng.randint(9, 10):02d}-{rng.randint(1, 3):02d}", "mode": "paper",
+                             "right": r, "wrong": w, "blank": tot - r - w})
+            missed = [{"itemId": i["id"], "times": rng.randint(0, len(atts))}
+                      for i in lst["items"] if atts and rng.random() < 0.5]
+            f_lists.append({**lst, "attempts": atts, "missed": missed})
+        files.append({"format": "dictalark-class-results", "schema": 1, "pupil": rng.choice(pupils),
+                      "madeAt": f"2026-10-0{rng.randint(1, 3)}T00:00:00Z", "lists": f_lists})
+    return files
+
+
+def rand_pupil_lib(rng):
+    lists = []
+    attempts = []
+    for k in range(rng.randint(1, 3)):
+        items = [{"id": f"i{j}", "text": f"w{j}", "accept": [], "note": ""} for j in range(rng.randint(1, 6))]
+        lists.append({"id": f"L{k}", "name": f"List {k}", "subject": "english", "lang": "en-GB",
+                      "items": items, "createdAt": "2026-10-01T00:00:00Z", "updatedAt": "2026-10-01T00:00:00Z"})
+        for a in range(rng.randint(0, 5)):
+            ids = [i["id"] for i in items] + ["gone"]
+            entries = [{"itemId": rng.choice(ids), "result": rng.choice(["right", "wrong", "blank"]), "answer": "x"}
+                       for _ in range(rng.randint(0, 5))]
+            attempts.append({"id": f"a{k}-{a}", "listId": f"L{k}", "day": "2026-10-0" + str(rng.randint(1, 9)),
+                             "mode": rng.choice(["paper", "typing", "cards"]), "entries": entries})
+    rng.shuffle(attempts)
+    return {"lists": lists, "attempts": attempts, "srs": {}}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=int(os.environ.get("ORACLE_SEED", "20261008")))
@@ -294,9 +462,25 @@ def main() -> int:
     below_cases = [{"n": rng.choice([3 * 2 ** 30, 2 ** 31 + 1, rng.randint(1, 2 ** 32)]),
                     "seed": rng.randint(0, 999_999), "count": 20} for _ in range(N // 20)]
 
+    rs_cases = [{"data": [rng.randrange(256) for _ in range(rng.randint(1, 153))],
+                 "ec": rng.choice([7, 10, 13, 15, 16, 17, 18, 20, 22, 24, 26, 28, 30])}
+                for _ in range(N // 10)]
+    qr_texts = ["", "a", "默書", "https://kinfxhk.github.io/dictalark/#/share/"]
+    qrdata_cases = [{"text": rng.choice(qr_texts) + "".join(rng.choice("abcXYZ09-_é雲")
+                                                              for _ in range(rng.randint(0, 120))),
+                     "v": rng.randint(1, 40), "ecc": rng.choice("LMQH")} for _ in range(N // 10)]
+
+    summary_cases = [rand_results_files(rng) for _ in range(N // 10)]
+    results_cases = []
+    for _ in range(N // 10):
+        lib = rand_pupil_lib(rng)
+        ids = [l["id"] for l in lib["lists"]]
+        results_cases.append({"lib": lib, "ids": rng.sample(ids, rng.randint(1, len(ids)))})
+
     payload = {"align": align_cases, "mark": mark_cases, "next": next_cases, "days": day_cases,
                "due": due_cases, "local": local_cases, "shuffle": shuffle_cases,
-               "below": below_cases}
+               "below": below_cases, "rs": rs_cases, "qrdata": qrdata_cases,
+               "summary": summary_cases, "results": results_cases}
     proc = subprocess.run([os.environ.get("NODE", "node"), "--import", "tsx",
                            os.path.join("tools", "oracle", "bridge.ts")],
                           input=json.dumps(payload).encode(), capture_output=True, cwd=ROOT)
@@ -309,6 +493,29 @@ def main() -> int:
     def fail(m):
         fails.append(m)
 
+    for c, g in zip(summary_cases, got["summary"]):
+        want = summarise(c)
+        if want != g:
+            fail(f"summary {json.dumps(c, ensure_ascii=False)[:300]}: oracle {want} ts {g}")
+    for c, g in zip(results_cases, got["results"]):
+        want = results_of(c["lib"], c["ids"])
+        if "error" in g or want != g["lists"]:
+            fail(f"results {c['ids']}: oracle {want} ts {g}")
+    for c, g in zip(rs_cases, got["rs"]):
+        if rs_remainder(c["data"], c["ec"]) != g:
+            fail(f"reedSolomon {c}: differs")
+    qr_checked = 0
+    qr_refused = 0
+    for c, g in zip(qrdata_cases, got["qrdata"]):
+        want = qr_data(c["text"], c["v"], g["cap"])
+        if want is None:  # too long for this symbol: TS must refuse it
+            qr_refused += 1
+            if g["out"] != {"error": "too-large"}:
+                fail(f"qr data {c}: should be refused, ts {g['out']}")
+            continue
+        qr_checked += 1
+        if want != g["out"]:
+            fail(f"qr data {c}: oracle {want} ts {g['out']}")
     for c, g in zip(below_cases, got["below"]):
         nxt = prng(c["seed"])
         if [below(nxt, c["n"]) for _ in range(c["count"])] != g:
@@ -359,7 +566,9 @@ def main() -> int:
     print(f"dictalark oracle seed={a.seed}: align {len(align_cases)}, mark {len(mark_cases)}, "
           f"nextCard {len(next_cases)}, days {len(day_cases)}, due {len(due_cases)}, "
           f"localDay {len(local_cases)}{'' if have_zones else ' (no tz database: skipped)'}, "
-          f"shuffle {len(shuffle_cases)}, below {len(below_cases)}")
+          f"shuffle {len(shuffle_cases)}, below {len(below_cases)}, "
+          f"classSummary {len(summary_cases)}, classResults {len(results_cases)}, "
+          f"reedSolomon {len(rs_cases)}, qrData {qr_checked} (+{qr_refused} too long)")
     if fails:
         print(f"FAILED: {len(fails)} differences")
         for f in fails[:30]:
