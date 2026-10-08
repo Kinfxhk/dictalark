@@ -1,0 +1,11 @@
+{
+  "name": "@dictalark/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dictalark command line (word-list conversion and validation) and loopback static server.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "dependencies": {
+    "@dictalark/core": "*"
+  }
+}

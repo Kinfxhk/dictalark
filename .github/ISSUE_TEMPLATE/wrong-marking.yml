@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: Wrong marking
+description: Dictalark marked a typed answer right when it was wrong, or wrong when it was right.
+title: 'Wrong marking: '
+labels: ['wrong marking']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Every marking mistake we fix gets a regression test, so it stays fixed.
+        Please use your own words: do **not** paste lists copied from textbooks or exam papers.
+  - type: input
+    id: expected
+    attributes:
+      label: The word or sentence in the list
+      placeholder: receive
+    validations:
+      required: true
+  - type: input
+    id: typed
+    attributes:
+      label: What was typed
+      placeholder: recieve
+    validations:
+      required: true
+  - type: textarea
+    id: shown
+    attributes:
+      label: What Dictalark showed, and what you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown in the page footer, for example v0.1.0.
+      placeholder: v0.1.0
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: Chrome 140 on Windows 11

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: Something does not work
+description: A bug in reading aloud, recording, saving, printing or the interface.
+title: 'Bug: '
+labels: ['bug']
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: Steps to reproduce help a lot. Please do not attach recordings of children.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: v0.1.0
+  - type: input
+    id: browser
+    attributes:
+      label: Browser, device and voice language
+      placeholder: Safari on iPad, Cantonese (Hong Kong) voice

@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: Translation or wording
+description: Improve the English or Traditional Chinese interface text.
+title: 'Wording: '
+labels: ['translation']
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Where in the app
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Current text and your suggestion
+    validations:
+      required: true
