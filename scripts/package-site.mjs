@@ -34,7 +34,8 @@ const entries = [
         '  python3 -m http.server 8080 --bind 127.0.0.1\n' +
         'then open http://127.0.0.1:8080/\n\n' +
         'Licence: AGPL-3.0-or-later (see LICENSE). Source: https://github.com/Kinfxhk/dictalark\n' +
-        'Not legal advice: a rota that passes the check only follows the rules you entered.\n',
+        'Your lists, results and recordings stay in your browser on your device.\n' +
+        'Automatic marking is only a guide; check answers yourself.\n',
     ),
   ],
 ];

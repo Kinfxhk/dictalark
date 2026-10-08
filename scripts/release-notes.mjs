@@ -33,10 +33,11 @@ if (existsSync(sumFile)) {
 lines.push(
   '### Please note · 請注意',
   '',
-  '- **Not legal advice.** "Passes the check" only means the rota follows the rules you entered; it does not mean it complies with any law or contract. The Hong Kong rest-day preset is not legal advice: employers must check their own obligations.',
-  '- **非法律意見。**「通過檢查」只代表更表符合你自己輸入的規則，並不代表符合任何法例或合約。香港休息日預設並非法律意見，僱主須自行確認本身的責任。',
-  '- Dictalark is an independent open-source project and is not affiliated with any other scheduling product or company. 排更易是獨立開源項目，與任何其他排班產品或公司並無關連。',
+  '- **Automatic marking is only a guide.** Chinese answers are compared character by character, with no Traditional/Simplified conversion; please check answers yourself. 自動批改只供參考；中文逐字比對，不作繁簡轉換，請自行核對。',
+  '- **Your data stays on your device.** Lists, results and recordings are kept in your browser (IndexedDB); the app makes no network requests. 詞表、成績及錄音只存於你的裝置，程式不發出網絡請求。',
+  '- Dictalark is an independent open-source project and is not affiliated with any other dictation or spelling product or company. 默書雲雀是獨立開源項目，與任何其他默書或串字產品或公司並無關連。',
+  '- No ads, no tracking, no paid unlocks. 沒有廣告、沒有追蹤、沒有付費解鎖。',
   '',
-  'If Dictalark helps you, you can support it at https://buymeacoffee.com/kinfxhk · 如果排更易對你有幫助，歡迎到 Buy Me a Coffee 支持。',
+  'If Dictalark helps your family, you can support it at https://buymeacoffee.com/kinfxhk · 如果默書雲雀對你的家庭有幫助，歡迎到 Buy Me a Coffee 支持。',
 );
 process.stdout.write(lines.join('\n') + '\n');

@@ -26,6 +26,24 @@ mistakes) is free here, with **no ads, no accounts and no tracking**.
 - How to use it, including how to add a Cantonese voice to your device:
   [guide](docs/guide.md).
 
+![Typing-mode results: each answer is marked, with letter-by-letter differences](docs/screenshot.png)
+
+### Use it
+
+- **Online:** <https://kinfxhk.github.io/dictalark/> (after the first visit it also
+  works offline; nothing you enter is sent anywhere).
+- **Download:** the static site zip on the
+  [releases page](https://github.com/Kinfxhk/dictalark/releases) (with a SHA-256
+  checksum). Serve the folder from `localhost` or `https`.
+- **From source** (Node.js 22 or later):
+
+```sh
+npm ci
+npm start          # builds, then serves on http://127.0.0.1:4887/
+```
+
+- **Container:** `docker build -t dictalark . && docker run --rm -p 127.0.0.1:4887:4887 dictalark`
+
 ### Important
 
 - Automatic marking is **only a guide**. For Chinese it compares characters
@@ -91,6 +109,13 @@ If Dictalark helps your family, you can support it at
 - 提供英文及繁體中文（香港）介面。
 - 授權：[AGPL-3.0-or-later](LICENSE)。
 - 使用方法（包括如何為裝置加入粵語語音）：[使用指南](docs/guide.zh-Hant.md)。
+
+### 使用方法
+
+- **網上版：**<https://kinfxhk.github.io/dictalark/>（首次開啟後可離線使用；輸入的內容不會傳送到任何地方）。
+- **下載：**[發佈頁](https://github.com/Kinfxhk/dictalark/releases)提供靜態網站 zip 及 SHA-256 校驗碼，
+  請以 `localhost` 或 `https` 開啟。
+- **從原始碼執行**（Node.js 22 或以上）：`npm ci`，然後 `npm start`，開啟 http://127.0.0.1:4887/ 。
 
 ### 重要事項
 
