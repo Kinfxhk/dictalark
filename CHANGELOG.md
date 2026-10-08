@@ -6,6 +6,20 @@ All notable changes to Dictalark are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Independent Python oracle** (`tools/oracle/oracle.py`, standard library only, run by
+  `npm run oracle` and in CI on Linux and Windows): many thousands of random cases for
+  answer marking (typing rules, accepted answers), word alignment (its own
+  Damerau/OSA distance and a rebuild of both strings from the steps), review-box days,
+  calendar arithmetic (days outside 2000–2999 must be refused), local day in a time zone,
+  the due list order, and the seeded shuffle, compared with what the app computes.
+  12 deliberately broken versions of the app code were all caught.
+
+### Changed
+
+- The README screenshot is now taken from the live v0.2.0 site.
+
 ## [0.2.0] - 2026-10-08
 
 Improvements from what users of other dictation apps ask for most. 根據其他默書 app

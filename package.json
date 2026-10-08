@@ -40,7 +40,8 @@
     "check:secrets": "node scripts/secret-scan.mjs",
     "check:hygiene": "node scripts/check-hygiene.mjs",
     "check": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run check:licenses && npm run check:hygiene && npm run check:secrets",
-    "release:notes": "node scripts/release-notes.mjs"
+    "release:notes": "node scripts/release-notes.mjs",
+    "oracle": "python3 tools/oracle/oracle.py"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
