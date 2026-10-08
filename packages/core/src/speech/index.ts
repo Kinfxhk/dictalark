@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 export * from './voices';
 export * from './punctuation';
+export * from './segments';
 
 /** Seconds a device voice may take for `text` before we stop waiting for "end". */
 export function speechTimeoutMs(text: string, rate: number): number {

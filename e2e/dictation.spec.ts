@@ -276,7 +276,7 @@ test('import CSV, back up to JSON, wipe, restore', async ({ page, baseURL }) => 
     page.waitForEvent('download'),
     page.locator('#export-all').click(),
   ]);
-  expect(dl.suggestedFilename()).toMatch(/^dictalark-\d{4}-\d{2}-\d{2}\.json$/);
+  expect(dl.suggestedFilename()).toMatch(/^dictalark-backup-\d{4}-\d{2}-\d{2}\.json$/);
   const json = await (await dl.createReadStream()).toArray();
   const text = Buffer.concat(json).toString('utf8');
   expect(JSON.parse(text).format).toBe('dictalark');

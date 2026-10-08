@@ -246,3 +246,86 @@ describe('player (model-based, 2,000 random event sequences)', () => {
     );
   });
 });
+
+// v0.2: controls must always win over a reading in progress (competitor reviews report
+// "stop keeps reading" and "next does nothing"). Invariants checked on random sequences.
+describe('player controls during a reading (v0.2 regression, 2,000 sequences)', () => {
+  it('stop, next, prev, repeat and pause always cancel a reading in progress', () => {
+    fc.assert(
+      fc.property(
+        fc.subarray(['a', 'b', 'c', 'd', 'e'], { minLength: 1 }),
+        cfgArb,
+        fc.array(eventArb, { maxLength: 40 }),
+        fc.constantFrom<PlayerEvent['type']>('stop', 'next', 'prev', 'repeat', 'pause'),
+        (order, c, events, control) => {
+          let s = initialState(order);
+          for (const e of events) s = step(s, e, c).state;
+          if (s.phase !== 'speaking') return;
+          const r = step(s, { type: control } as PlayerEvent, c);
+          expect(r.effects[0]).toEqual({ type: 'cancel' });
+          if (control === 'stop') expect(r.state.phase).toBe('done');
+          if (control === 'pause') expect(r.state.phase).toBe('paused');
+          if (control === 'next') {
+            if (s.index + 1 < s.order.length)
+              expect(r.state).toMatchObject({ phase: 'speaking', index: s.index + 1, readings: 0 });
+            else expect(r.state.phase).toBe('done');
+          }
+        },
+      ),
+      { numRuns: 2000 },
+    );
+  });
+
+  it('after stop nothing is ever read again, whatever happens next', () => {
+    fc.assert(
+      fc.property(
+        fc.subarray(['a', 'b', 'c'], { minLength: 1 }),
+        cfgArb,
+        fc.array(eventArb, { maxLength: 30 }),
+        fc.array(eventArb, { maxLength: 30 }),
+        (order, c, before, after) => {
+          let s = step(initialState(order), { type: 'start' }, c).state;
+          for (const e of before) s = step(s, e, c).state;
+          s = step(s, { type: 'stop' }, c).state;
+          expect(['done', 'idle']).toContain(s.phase);
+          for (const e of after) {
+            const r = step(s, e, c);
+            s = r.state;
+            expect(r.effects.filter((x) => x.type === 'speak')).toEqual([]);
+          }
+        },
+      ),
+      { numRuns: 2000 },
+    );
+  });
+
+  it('a paused dictation never reads on its own (ticks and late "end" events)', () => {
+    fc.assert(
+      fc.property(
+        fc.subarray(['a', 'b', 'c'], { minLength: 1 }),
+        cfgArb,
+        fc.array(eventArb, { maxLength: 30 }),
+        fc.array(
+          fc.oneof(
+            fc.constant<PlayerEvent>({ type: 'spoken' }),
+            fc.integer({ min: 0, max: 90_000 }).map<PlayerEvent>((ms) => ({ type: 'tick', ms })),
+          ),
+          { maxLength: 30 },
+        ),
+        (order, c, before, idle) => {
+          let s = step(initialState(order), { type: 'start' }, c).state;
+          for (const e of before) s = step(s, e, c).state;
+          if (s.phase === 'done' || s.phase === 'idle') return;
+          s = step(s, { type: 'pause' }, c).state;
+          expect(s.phase).toBe('paused');
+          for (const e of idle) {
+            const r = step(s, e, c);
+            expect(r.effects).toEqual([]);
+            expect(r.state).toEqual(s);
+          }
+        },
+      ),
+      { numRuns: 2000 },
+    );
+  });
+});

@@ -16,6 +16,12 @@ mistakes) is free here, with **no ads, no accounts and no tracking**.
 - Your word lists, results and **recordings stay on your device** (IndexedDB in
   your browser). Dictalark makes no network requests after the page loads.
 - English and Traditional Chinese (Hong Kong) interface.
+- **New in v0.2:** "read as" text per word (fixes characters a device voice reads with
+  the wrong sound), full backups that include recordings, start from any item and
+  continue after stopping, passage mode (split at punctuation) with your own names for
+  punctuation marks, a voices page to try and choose voices, share a list as a link
+  (no server), and the browser is asked to keep Dictalark's storage, with a gentle
+  backup reminder.
 - Licence: [AGPL-3.0-or-later](LICENSE).
 - How to use it, including how to add a Cantonese voice to your device:
   [guide](docs/guide.md).
@@ -101,6 +107,9 @@ If Dictalark helps your family, you can support it at
 - 詞表、成績及**錄音只存於你的裝置**（瀏覽器的 IndexedDB）。網頁載入後不會再發出
   任何網絡請求。
 - 提供英文及繁體中文（香港）介面。
+- **v0.2 新功能：**每個詞語可設「讀出文字」（解決裝置語音讀錯多音字）、備份包括錄音、可以由任何一項開始，
+  停止後可以繼續、段落模式（按標點分句）及自訂標點讀法、語音試聽頁、以連結分享詞表（不經伺服器），
+  並會要求瀏覽器保留資料，加上溫和的備份提示。
 - 授權：[AGPL-3.0-or-later](LICENSE)。
 - 使用方法（包括如何為裝置加入粵語語音）：[使用指南](docs/guide.zh-Hant.md)。
 

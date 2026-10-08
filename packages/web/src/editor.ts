@@ -3,10 +3,10 @@
 // the parent's own recordings (stored only in this browser).
 
 import {
+  encodeShare,
   findDuplicates,
   LIMITS,
   listToCsv,
-  pickVoice,
   SUBJECTS,
   validateLang,
   validateText,
@@ -25,7 +25,8 @@ import {
   showBanner,
 } from './app';
 import { download, fileName, h, newId } from './dom';
-import { canRecord, listVoices, playRecording, record, stopAudio } from './env';
+import { canRecord, playRecording, record, stopAudio } from './env';
+import { chooseVoice } from './session';
 import { fillList, printNow } from './print';
 import { getLocale, t, type StringKey } from './strings';
 import type { ActiveRecording } from './recorder';
@@ -43,7 +44,7 @@ const GUIDE = 'https://github.com/Kinfxhk/dictalark/blob/main/docs/';
 let active: { key: string; rec: ActiveRecording } | undefined;
 
 export function voiceStatus(lang: string): HTMLElement {
-  const choice = pickVoice(listVoices(), lang, { allowRemote: app.settings.allowRemoteVoices });
+  const choice = chooseVoice(lang);
   const text =
     choice.quality === 'exact'
       ? t('voice.exact', { name: choice.voice!.name })
@@ -202,6 +203,7 @@ export function renderEditor(view: HTMLElement, listId: string, rerender: () => 
       addBox,
       h('div', { class: 'toolbar' }, addBtn),
     ),
+    h('p', { class: 'note', id: 'say-help' }, t('list.sayHelp')),
     h(
       'section',
       { class: 'card', 'aria-labelledby': 'items-title' },
@@ -218,8 +220,10 @@ export function renderEditor(view: HTMLElement, listId: string, rerender: () => 
                 {},
                 h('th', {}, '#'),
                 h('th', {}, t('list.word')),
+                h('th', {}, t('list.say')),
                 h('th', {}, t('list.accept')),
                 h('th', {}, t('list.note')),
+                h('th', {}, t('list.itemLang')),
                 h('th', {}, t('list.recording')),
                 h('th', {}, ''),
               ),
@@ -265,6 +269,16 @@ export function renderEditor(view: HTMLElement, listId: string, rerender: () => 
           'button',
           {
             type: 'button',
+            id: 'share-btn',
+            disabled: list.items.length === 0,
+            onclick: () => void shareList(list),
+          },
+          t('share.copy'),
+        ),
+        h(
+          'button',
+          {
+            type: 'button',
             id: 'csv-btn',
             onclick: () =>
               download(fileName(list.name, 'csv'), listToCsv(list), 'text/csv;charset=utf-8'),
@@ -285,6 +299,17 @@ export function renderEditor(view: HTMLElement, listId: string, rerender: () => 
           },
           t('list.delete'),
         ),
+      ),
+      h(
+        'p',
+        { id: 'share-out', hidden: true },
+        h(
+          'label',
+          {},
+          t('share.link'),
+          h('input', { type: 'text', id: 'share-url', readonly: true, class: 'share-url' }),
+        ),
+        h('span', { class: 'note' }, t('share.note')),
       ),
     ),
   );
@@ -337,6 +362,43 @@ function itemRow(
       await save();
     },
   });
+  const say = h('input', {
+    type: 'text',
+    id: `item-say-${i}`,
+    value: item.say ?? '',
+    lang,
+    placeholder: item.text,
+    'aria-label': `${t('list.say')} ${i + 1}`,
+    onchange: async (e: Event) => {
+      const v = tryText((e.target as HTMLInputElement).value, LIMITS.itemChars, true);
+      if (v === undefined) return;
+      if (v === '' || v === item.text) delete item.say;
+      else item.say = v;
+      await save();
+    },
+  });
+  const itemLang = h(
+    'select',
+    {
+      id: `item-lang-${i}`,
+      'aria-label': `${t('list.itemLang')} ${i + 1}`,
+      onchange: async (e: Event) => {
+        const v = (e.target as HTMLSelectElement).value;
+        if (v === '') delete item.lang;
+        else item.lang = validateLang(v, 'lang');
+        await save();
+        rerender();
+      },
+    },
+    h('option', { value: '', selected: item.lang === undefined }, t('list.sameAsList')),
+    [...new Set([...LANGS, ...(item.lang ? [item.lang] : [])])].map((l) =>
+      h(
+        'option',
+        { value: l, selected: item.lang === l },
+        (LANGS as readonly string[]).includes(l) ? t(`lang.${l}` as StringKey) : l,
+      ),
+    ),
+  );
   const note = h('input', {
     type: 'text',
     id: `item-note-${i}`,
@@ -419,8 +481,10 @@ function itemRow(
     { class: dup ? 'dup' : '', 'data-has-recording': has ? 'true' : 'false' },
     h('td', {}, String(i + 1)),
     h('td', {}, text, dup ? h('span', { class: 'tag' }, t('list.duplicate')) : null),
+    h('td', {}, say),
     h('td', {}, accept),
     h('td', {}, note),
+    h('td', {}, itemLang),
     h('td', {}, recBtn, ' ', playBtn, ' ', delRec),
     h(
       'td',
@@ -447,4 +511,23 @@ function itemRow(
       ),
     ),
   );
+}
+
+/** Copy a link that carries the list itself (after "#", so it never reaches a server). */
+async function shareList(list: WordList): Promise<void> {
+  try {
+    const url = `${location.origin}${location.pathname}#/share/${encodeShare(list)}`;
+    const box = document.getElementById('share-url') as HTMLInputElement | null;
+    if (box) box.value = url;
+    try {
+      await navigator.clipboard.writeText(url);
+      showBanner(t('share.copied'));
+    } catch {
+      showBanner(t('share.copyYourself'));
+    }
+    document.getElementById('share-out')?.removeAttribute('hidden');
+    box?.select();
+  } catch (e) {
+    showBanner(describeError(e), 'error');
+  }
 }

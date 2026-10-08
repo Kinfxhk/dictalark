@@ -4,6 +4,7 @@
 // "Hello, world." → "Hello comma world full stop". Apostrophes and hyphens inside words
 // (don't, well-known) are part of the word and are not read.
 
+import { DictalarkError } from '../model/errors';
 import { isCantoneseTag, normTag } from './voices';
 
 type Names = Record<string, string>;
@@ -76,12 +77,25 @@ function namesFor(lang: string): Names | undefined {
   return undefined;
 }
 
-/** Spoken form of `text`, or the text unchanged for languages without a table. */
-export function speakPunctuation(text: string, lang: string): string {
-  const names = namesFor(lang);
-  if (!names) return text;
+/** Built-in spoken name of each mark for `lang` (empty for languages without a table). */
+export function punctuationNames(lang: string): Readonly<Names> {
+  return namesFor(lang) ?? {};
+}
+
+/**
+ * Spoken form of `text`, or the text unchanged for languages without a table.
+ * `overrides` (mark → name) replace or add names, e.g. { '！': '感歎號' }.
+ */
+export function speakPunctuation(
+  text: string,
+  lang: string,
+  overrides: Readonly<Record<string, string>> = {},
+): string {
+  const base = namesFor(lang);
+  if (!base && Object.keys(overrides).length === 0) return text;
+  const names: Names = { ...base, ...overrides };
   const keys = Object.keys(names).sort((a, b) => b.length - a.length);
-  const chinese = names === ZH;
+  const chinese = base === ZH;
   const out: string[] = [];
   let word = '';
   let quoteOpen = false;
@@ -119,4 +133,41 @@ export function speakPunctuation(text: string, lang: string): string {
   }
   flush();
   return out.join(' ');
+}
+
+const MARK_RE = /^[\p{P}\p{S}]{1,3}$/u;
+// eslint-disable-next-line no-control-regex
+const NAME_BAD_RE = /[\u0000-\u001f\u007f-\u009f=]/;
+export const MAX_PUNCTUATION_NAMES = 40;
+
+/**
+ * Read "mark = name" lines (one per line; blank lines and lines starting with # are
+ * skipped), e.g. "！ = 感歎號". Throws DictalarkError naming the first bad line.
+ */
+export function parsePunctuationNames(text: string): Record<string, string> {
+  const out: Record<string, string> = Object.create(null) as Record<string, string>;
+  const lines = text.split(/\r\n|\r|\n/);
+  let n = 0;
+  lines.forEach((raw, i) => {
+    const line = raw.trim();
+    if (line === '' || line.startsWith('#')) return;
+    const eq = line.indexOf('=', 1);
+    const mark = eq > 0 ? line.slice(0, eq).trim().normalize('NFC') : '';
+    const name =
+      eq > 0
+        ? line
+            .slice(eq + 1)
+            .trim()
+            .normalize('NFC')
+        : '';
+    if (!MARK_RE.test(mark) || name === '' || [...name].length > 20 || NAME_BAD_RE.test(name))
+      throw new DictalarkError('bad-shape', { path: `line ${i + 1}`, expected: 'mark = name' });
+    if (++n > MAX_PUNCTUATION_NAMES)
+      throw new DictalarkError('too-many-items', {
+        path: 'punctuation',
+        max: MAX_PUNCTUATION_NAMES,
+      });
+    out[mark] = name;
+  });
+  return out;
 }

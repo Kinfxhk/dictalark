@@ -21,6 +21,11 @@ export interface Item {
   /** Other answers that also count as right, e.g. `color` for `colour`. */
   accept: string[];
   note: string;
+  /**
+   * What the voice says instead of `text`, e.g. a homophone that makes a device voice pick
+   * the right reading of a 多音字. Marking always uses `text`. Absent = read `text`.
+   */
+  say?: string;
 }
 
 export interface WordList {
@@ -62,7 +67,20 @@ export interface Library {
   srs: Record<string, SrsCard>;
 }
 
-/** The JSON export / backup file. Recordings are not included in v0.1 exports. */
+/** One recording inside a full backup (schema 2+). `data` is base64 in the file. */
+export interface BackupRecording {
+  listId: string;
+  itemId: string;
+  mime: string;
+  /** Length in milliseconds. */
+  ms: number;
+  data: Uint8Array;
+}
+
+/**
+ * The JSON export / backup file. Schema 1 (v0.1) had no recordings; schema 2 may carry
+ * them in `recordings` (base64), so one file restores everything.
+ */
 export interface ExportFile {
   format: 'dictalark';
   schema: number;
@@ -70,4 +88,5 @@ export interface ExportFile {
   lists: WordList[];
   attempts: Attempt[];
   srs: Record<string, SrsCard>;
+  recordings?: { listId: string; itemId: string; mime: string; ms: number; data: string }[];
 }

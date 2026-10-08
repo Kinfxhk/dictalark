@@ -19,6 +19,7 @@ import {
 } from '@dictalark/core';
 import { byId } from './dom';
 import type { Store } from './db';
+import { EMPTY_BACKUP, noteChange, type BackupState, type PersistStatus } from './storage-guard';
 import { getLocale, t, type Locale } from './strings';
 
 export interface Settings {
@@ -32,6 +33,13 @@ export interface Settings {
   readPunctuation: boolean;
   mode: Mode;
   shuffle: boolean;
+  /** Passage mode: read each sentence part separately. */
+  passage: boolean;
+  /** Custom spoken names for punctuation, "mark = name" per line. */
+  punctNames: string;
+  /** Voice names chosen on the voices page (at most one per voice language). */
+  preferredVoices: string[];
+  backup: BackupState;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -45,6 +53,10 @@ export const DEFAULT_SETTINGS: Settings = {
   readPunctuation: false,
   mode: 'paper',
   shuffle: false,
+  passage: false,
+  punctNames: '',
+  preferredVoices: [],
+  backup: { ...EMPTY_BACKUP },
 };
 
 export const app = {
@@ -53,6 +65,7 @@ export const app = {
   settings: { ...DEFAULT_SETTINGS } as Settings,
   /** Keys `${listId}/${itemId}` that have a recording. */
   recordings: new Set<string>(),
+  persist: 'unsupported' as PersistStatus,
 };
 
 export const recKey = (listId: string, itemId: string): string => `${listId}/${itemId}`;
@@ -82,6 +95,8 @@ export function describeError(e: unknown): string {
 export async function saveLibrary(): Promise<boolean> {
   try {
     await app.store.saveLibrary(app.lib);
+    app.settings.backup = noteChange(app.settings.backup, nowIso());
+    await app.store.saveSettings(app.settings).catch(() => {});
     document.dispatchEvent(new Event('dictalark:saved'));
     return true;
   } catch (e) {

@@ -13,15 +13,18 @@ export interface ColumnMap {
   accept?: number;
   note?: number;
   lang?: number;
+  /** Spoken text (what the voice says instead of the word). */
+  say?: number;
 }
 
-export const EXPORT_HEADER = ['text', 'accept', 'note', 'lang'] as const;
+export const EXPORT_HEADER = ['text', 'accept', 'note', 'lang', 'say'] as const;
 
 const HEADER_NAMES: Record<keyof ColumnMap, RegExp> = {
   text: /^(text|word|words|term|item|詞語|詞|字詞|生字|句子|內容|文字)$/i,
   accept: /^(accept|accepted|also accept|alternatives?|可接受答案|其他答案|另一寫法)$/i,
   note: /^(note|notes|hint|meaning|備註|提示|解釋)$/i,
   lang: /^(lang|language|語言)$/i,
+  say: /^(say|spoken|read as|讀法|讀出|讀出文字)$/i,
 };
 
 /** Guess whether row 0 is a header and which columns hold what. */
@@ -76,6 +79,8 @@ export function itemsFromTable(
     };
     const lang = cell(map.lang).trim();
     if (lang) item.lang = validateLang(lang, `${path} lang`);
+    const say = validateText(cell(map.say), `${path} say`, { allowEmpty: true });
+    if (say && say !== item.text) item.say = say;
     items.push(item);
   });
   if (items.length > LIMITS.itemsPerList)
@@ -96,7 +101,13 @@ export function importTable(text: string): TableImport & { map: ColumnMap; hasHe
 export function listToCsv(list: WordList): string {
   const rows = [
     [...EXPORT_HEADER],
-    ...list.items.map((it) => [it.text, it.accept.join(' | '), it.note, it.lang ?? '']),
+    ...list.items.map((it) => [
+      it.text,
+      it.accept.join(' | '),
+      it.note,
+      it.lang ?? '',
+      it.say ?? '',
+    ]),
   ];
   return '\ufeff' + stringifyCsv(rows);
 }

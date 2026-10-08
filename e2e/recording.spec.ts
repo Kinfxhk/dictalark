@@ -98,3 +98,78 @@ test('record a word → reload → it plays → the dictation uses it → nothin
   expect(w.nonGet).toEqual([]);
   expect(w.errors).toEqual([]);
 });
+
+test('a full backup carries recordings: back up → wipe → import → the recording plays', async ({
+  page,
+  baseURL,
+}) => {
+  const w = watch(page, baseURL!);
+  await fakeSpeech(page);
+  await open(page);
+  await page.locator('#set-lang').selectOption('en');
+  await makeList(page, 'Backed up', ['lark', 'wren']);
+  await page.locator('#rec-1').click();
+  await expect(page.locator('#rec-1')).toHaveAttribute('aria-pressed', 'true');
+  await page.waitForTimeout(1200);
+  await page.locator('#rec-1').click();
+  await expect(page.locator('#items-table tbody tr').nth(1)).toHaveAttribute(
+    'data-has-recording',
+    'true',
+  );
+  await page.locator('a[href="#/"]').first().click();
+  const [dl] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#export-all').click(),
+  ]);
+  const text = Buffer.concat(await (await dl.createReadStream()).toArray()).toString('utf8');
+  const file = JSON.parse(text) as {
+    schema: number;
+    recordings: { itemId: string; data: string }[];
+  };
+  expect(file.schema).toBe(2);
+  expect(file.recordings).toHaveLength(1);
+  expect(file.recordings[0]!.data.length).toBeGreaterThan(500);
+  await expect(page.locator('#banner')).toContainText('1 recordings included');
+
+  page.once('dialog', (d) => void d.accept());
+  await page.locator('#wipe').click();
+  await expect(page.locator('#home-empty')).toBeVisible();
+  await page.locator('#import-file').setInputFiles({
+    name: 'backup.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(text, 'utf8'),
+  });
+  await expect(page.locator('#banner')).toContainText('已還原 1 段錄音');
+  // Import the same file again: the second copy gets a new list id and its own recording.
+  await page.locator('#import-file').setInputFiles({
+    name: 'backup.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(text, 'utf8'),
+  });
+  await expect(page.locator('#lists li')).toHaveCount(2);
+  for (const n of [0, 1]) {
+    await page
+      .locator('#lists li a', { hasText: /Edit|編輯/ })
+      .nth(n)
+      .click();
+    await expect(page.locator('#items-table tbody tr').nth(1)).toHaveAttribute(
+      'data-has-recording',
+      'true',
+    );
+    await expect(page.locator('#items-table tbody tr').nth(0)).toHaveAttribute(
+      'data-has-recording',
+      'false',
+    );
+    await page.evaluate(() => {
+      delete document.body.dataset.lastPlayback;
+    });
+    await page.locator('#play-1').click();
+    await expect(page.locator('body')).toHaveAttribute('data-last-playback', 'ended', {
+      timeout: 10_000,
+    });
+    await page.locator('a[href="#/"]').first().click();
+  }
+  expect(w.external).toEqual([]);
+  expect(w.nonGet).toEqual([]);
+  expect(w.errors).toEqual([]);
+});

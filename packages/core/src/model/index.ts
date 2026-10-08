@@ -7,3 +7,5 @@ export * from './json';
 export * from './migrate';
 export * from './library';
 export * from './duplicates';
+export * from './base64';
+export * from './share';

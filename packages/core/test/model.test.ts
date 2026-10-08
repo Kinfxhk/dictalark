@@ -152,7 +152,7 @@ describe('field validation', () => {
     ['a\tb', 'text-control-char'],
     ['a\u2028b', 'text-control-char'],
     ['a\ud800b', 'text-control-char'],
-    ['x'.repeat(121), 'text-too-long'],
+    ['x'.repeat(501), 'text-too-long'],
   ])('text %j → %s', (t, expected) => {
     expect(code(() => validateText(t, 'x'))).toBe(expected);
   });

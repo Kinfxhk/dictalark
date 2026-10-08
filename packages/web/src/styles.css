@@ -422,3 +422,18 @@ tr.dup td:first-child input {
     display: block;
   }
 }
+
+/* Backup reminder (v0.2) */
+.banner.reminder:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.share-url {
+  width: 100%;
+}
+#persist-status[data-status='not-persisted'],
+#persist-status[data-status='unsupported'] {
+  font-weight: 600;
+}

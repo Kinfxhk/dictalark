@@ -247,11 +247,11 @@ describe('table → items', () => {
     const text = Array.from({ length: LIMITS.itemsPerList + 1 }, (_, i) => `w${i}`).join('\n');
     expect(code(() => importTable(text))).toBe('too-many-items');
   });
-  it('a word over 120 characters is refused with its row', () => {
-    expect(code(() => importTable(`ok\n${'x'.repeat(121)}\n`))).toBe('text-too-long');
+  it('a word over 500 characters is refused with its row', () => {
+    expect(code(() => importTable(`ok\n${'x'.repeat(501)}\n`))).toBe('text-too-long');
   });
-  it('120 characters counted as code points (𠮷 counts once)', () => {
-    expect(importTable('𠮷'.repeat(120)).items[0]!.text).toBe('𠮷'.repeat(120));
+  it('500 characters counted as code points (𠮷 counts once)', () => {
+    expect(importTable('𠮷'.repeat(500)).items[0]!.text).toBe('𠮷'.repeat(500));
   });
   it('a bad language code in the lang column is refused', () => {
     expect(code(() => importTable('text,lang\nspoon,english!!\n'))).toBe('bad-lang');

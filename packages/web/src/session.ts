@@ -5,8 +5,10 @@
 
 import {
   initialState,
+  parsePunctuationNames,
   pickVoice,
   speakPunctuation,
+  type VoiceChoice,
   step,
   type Item,
   type PlayerConfig,
@@ -20,6 +22,12 @@ export interface SessionItem {
   listId: string;
   item: Item;
   lang: string;
+  /** Passage mode: the part of the item read in this step (default: the whole item). */
+  speak?: string;
+  /** Passage mode: which part this is, 0-based, of how many. */
+  part?: { i: number; n: number };
+  /** Passage mode: index of the item this step belongs to. */
+  itemIndex?: number;
 }
 
 export type Source = 'recording' | 'voice' | 'manual';
@@ -40,10 +48,29 @@ export interface Session {
 
 export const TICK_MS = 200;
 
+/** The device voice for `lang`, honouring the voices chosen on the voices page. */
+export function chooseVoice(lang: string): VoiceChoice {
+  return pickVoice(listVoices(), lang, {
+    allowRemote: app.settings.allowRemoteVoices,
+    preferredNames: app.settings.preferredVoices,
+  });
+}
+
+/** What the voice says for an item: its spoken text if set, otherwise the word itself. */
+export const spokenText = (s: SessionItem): string => s.speak ?? s.item.say ?? s.item.text;
+
+/** Custom punctuation names from settings (a bad entry is ignored here; the form checks). */
+export function punctuationOverrides(): Record<string, string> {
+  try {
+    return parsePunctuationNames(app.settings.punctNames);
+  } catch {
+    return {};
+  }
+}
+
 export function sourceFor(s: SessionItem): Source {
   if (app.recordings.has(recKey(s.listId, s.item.id))) return 'recording';
-  const choice = pickVoice(listVoices(), s.lang, { allowRemote: app.settings.allowRemoteVoices });
-  return choice.voice ? 'voice' : 'manual';
+  return chooseVoice(s.lang).voice ? 'voice' : 'manual';
 }
 
 /** Read one item aloud outside a dictation (flash cards). */
@@ -55,8 +82,13 @@ export async function readAloud(s: SessionItem): Promise<Source> {
     const rec = await app.store.getRecording(recKey(s.listId, s.item.id)).catch(() => undefined);
     if (rec) await playRecording(rec);
   } else if (source === 'voice') {
-    const choice = pickVoice(listVoices(), s.lang, { allowRemote: app.settings.allowRemoteVoices });
-    await speaker.speak(s.item.text, choice.voice?.lang ?? s.lang, choice.voice, app.settings.rate);
+    const choice = chooseVoice(s.lang);
+    await speaker.speak(
+      spokenText(s),
+      choice.voice?.lang ?? s.lang,
+      choice.voice,
+      app.settings.rate,
+    );
   }
   return source;
 }
@@ -88,12 +120,10 @@ export function createSession(
       if (my !== token) return;
       outcome = rec ? await playRecording(rec) : 'error';
     } else {
-      const choice = pickVoice(listVoices(), s.lang, {
-        allowRemote: app.settings.allowRemoteVoices,
-      });
+      const choice = chooseVoice(s.lang);
       const text = app.settings.readPunctuation
-        ? speakPunctuation(s.item.text, s.lang)
-        : s.item.text;
+        ? speakPunctuation(spokenText(s), s.lang, punctuationOverrides())
+        : spokenText(s);
       outcome = await speaker.speak(
         text,
         choice.voice?.lang ?? s.lang,

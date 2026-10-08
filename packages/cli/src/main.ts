@@ -10,7 +10,8 @@ import {
   errorMessage,
   importTable,
   isDictalarkError,
-  parseLibrary,
+  LIMITS,
+  parseBackup,
   serializeLibrary,
   validateLang,
   validateList,
@@ -30,7 +31,10 @@ export function run(argv: string[], now = new Date()): { code: number; out: stri
   try {
     if (!cmd || !file || !['convert', 'validate'].includes(cmd))
       return { code: 2, out: '', err: USAGE };
-    const text = decodeUtf8(new Uint8Array(readFileSync(file)));
+    const text = decodeUtf8(
+      new Uint8Array(readFileSync(file)),
+      cmd === 'validate' ? LIMITS.backupBytes : LIMITS.importBytes,
+    );
     if (cmd === 'convert') {
       const t = importTable(text);
       const stamp = now.toISOString().replace(/\.\d+Z$/, 'Z');
@@ -48,9 +52,10 @@ export function run(argv: string[], now = new Date()): { code: number; out: stri
       return { code: 0, out, err };
     }
     if (cmd === 'validate') {
-      const lib = parseLibrary(text);
+      const lib = parseBackup(text);
       const items = lib.lists.reduce((n, l) => n + l.items.length, 0);
-      return { code: 0, out: `ok: ${lib.lists.length} lists, ${items} items\n`, err: '' };
+      const recs = lib.recordings.length ? `, ${lib.recordings.length} recordings` : '';
+      return { code: 0, out: `ok: ${lib.lists.length} lists, ${items} items${recs}\n`, err: '' };
     }
     return { code: 2, out: '', err: USAGE };
   } catch (e) {

@@ -1,7 +1,7 @@
 {
   "name": "dictalark-monorepo",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Dictalark (默書雲雀): free, offline, open-source dictation and spelling practice. Your own word lists, device voices or your own recordings, fair automatic marking, no ads, no tracking.",
   "license": "AGPL-3.0-or-later",
   "homepage": "https://kinfxhk.github.io/dictalark/",

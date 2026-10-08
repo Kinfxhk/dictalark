@@ -17,14 +17,25 @@ can change every mark.
 3. Optional, per word:
    - **Also accept**: other answers that count as right, separated by `|` (for example
      `color` for `colour`).
+   - **Read as**: what the voice should say instead of the word. Use it when a device
+     voice reads a character with the wrong sound (for example a character with two
+     readings): type a character or word with the right sound. Marking always uses the
+     word itself.
+   - **Language**: a different reading language for this word only (for example an
+     English word in a Chinese list).
    - **Note**: a reminder for yourself (not read aloud).
    - **Record**: read the word yourself. Recordings stop by themselves after 30 seconds
      and are stored only in this browser. A recording is always used before a device
      voice, so record any word the device voice reads badly.
 
 You can also **import** a CSV or TSV file (columns: word, other accepted answers, note,
-language; headers in English or Chinese are recognised) or a Dictalark JSON backup.
+language, read as; headers in English or Chinese are recognised) or a Dictalark JSON backup.
 Files must be UTF-8. Use **Add sample lists** for three small example lists.
+
+**Copy share link** puts the whole list inside a link (after `#`, the part browsers never
+send to a server), for example to send to another parent. Opening the link shows the
+list first; it is only added when you press **Add to my lists**. Recordings and results
+are not included. Very long lists may be too long for a link; use a CSV file instead.
 
 ## 2. Practise
 
@@ -41,9 +52,19 @@ Open a list and press **Practise**. Choose how:
 - **Flash cards**: read aloud, reveal, and mark yourself.
 
 Settings: readings per word, the pause between readings and between words, a countdown,
-speed, shuffle (the same shuffle number gives the same order again), hide the words while
-reading, and read punctuation aloud. During a dictation you can pause, go back, read
-again, skip or finish.
+speed, shuffle (the same shuffle number gives the same order again), **start from item**,
+hide the words while reading, and read punctuation aloud. During a dictation you can
+pause, go back, read again, skip or finish. If you finish early, the results page offers
+**Continue from item N** (with the same shuffle number, so the order is the same).
+
+- **Passage mode** splits each item at punctuation (，。！？ , . ! ? and so on) and reads
+  each part on its own, as many times as set. An item can hold up to 500 characters.
+  Items with a recording are played whole.
+- **Names for punctuation marks**: when punctuation is read aloud, you can replace the
+  built-in names, one per line, for example `！ = 感歎號`.
+- **Voices** (top menu) lists every voice your browser offers, with its language and
+  whether it is on the device or online. Press **Try** to hear it and **Use for this
+  language** to choose it. Online voices can only be tried when allowed in settings.
 
 If the device has no voice for the language and the word has no recording, Dictalark
 waits for you: read the word aloud yourself and press **I have read it aloud**.
@@ -87,7 +108,16 @@ always the most reliable choice.
 
 Everything stays in this browser on this device (IndexedDB). Dictalark makes no network
 requests and has no accounts, ads or tracking. **Back up everything (JSON)** saves your
-lists, results and review schedule to a file (recordings are not included in v0.1).
-**Delete all data on this device** removes everything Dictalark stored.
+lists, results, review schedule and recordings to one file. Importing it adds everything
+back (nothing on the device is overwritten). Backups from v0.1, which had no recordings,
+can still be imported. **Delete all data on this device** removes everything Dictalark
+stored.
+
+Dictalark asks the browser to **keep** its storage, so that the browser does not clear it
+by itself when the device runs low on space. The **Your data** box shows the answer:
+kept, not kept, or not supported by this browser. Browsers decide this themselves.
+After 20 changes, or 14 days after the first change since your last backup, a small
+reminder offers **Back up now** or **Not now** (quiet for 7 days or 20 more changes). It
+never appears during a dictation.
 
 Clearing your browser's site data also deletes Dictalark's data, so keep a backup.

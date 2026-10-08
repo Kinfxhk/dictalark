@@ -8,8 +8,13 @@ import { isObj } from './validate';
 
 export type Migration = (data: Record<string, unknown>) => Record<string, unknown>;
 
-/** Schema 1 is the first public format; there is nothing to migrate from yet. */
-export const MIGRATIONS: Readonly<Record<number, Migration>> = Object.freeze({});
+/**
+ * 1 → 2 (v0.2): items may have `say`, and the file may carry `recordings`. Both are
+ * optional, so a schema-1 file is already a valid schema-2 file.
+ */
+export const MIGRATIONS: Readonly<Record<number, Migration>> = Object.freeze({
+  1: (d: Record<string, unknown>) => ({ ...d }),
+});
 
 export function migrate(
   data: unknown,

@@ -5,8 +5,11 @@ export const LIMITS = {
   lists: 200,
   /** Items in one list. */
   itemsPerList: 200,
-  /** Characters (Unicode code points) in one item's text, accepted answer or note. */
-  itemChars: 120,
+  /**
+   * Characters (Unicode code points) in one item's text, spoken text, accepted answer or
+   * note. 500 since v0.2 so a short passage fits in one item (passage mode).
+   */
+  itemChars: 500,
   /** Accepted alternative answers per item. */
   acceptPerItem: 10,
   /** Characters in a list name. */
@@ -15,8 +18,14 @@ export const LIMITS = {
   recordingSeconds: 30,
   /** Bytes of all recordings together. */
   recordingBytesTotal: 200 * 1024 * 1024,
-  /** Bytes of one imported file (JSON or CSV/TSV). */
+  /** Bytes of one imported file (CSV/TSV, or JSON without recordings). */
   importBytes: 2 * 1024 * 1024,
+  /** Bytes of one full backup file with recordings (base64 adds a third). */
+  backupBytes: 300 * 1024 * 1024,
+  /** Bytes of one recording (30 s of compressed audio is far smaller). */
+  recordingBytesEach: 8 * 1024 * 1024,
+  /** Characters of a share link's data part (after `#/share/`). */
+  shareChars: 24_000,
   /** Nesting depth of an imported JSON file. */
   jsonDepth: 12,
   /** Practice attempts kept per list (oldest are dropped). */

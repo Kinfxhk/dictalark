@@ -6,6 +6,56 @@ All notable changes to Dictalark are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-08
+
+Improvements from what users of other dictation apps ask for most. 根據其他默書 app
+用戶最常提出的需要而改進。
+
+### Added
+
+- **Read as** (讀出文字): each word can have its own spoken text, used only by the voice.
+  When a device voice reads a character with the wrong sound, type a character with the
+  right sound; marking always uses the word itself. Also a `say` / `讀法` CSV column.
+- **Per-word language** can now be chosen in the list editor (it existed in files only).
+- **Full backups with recordings**: "Back up everything" now saves recordings too
+  (schema 2, base64 in the JSON file). Importing restores them, following any list that
+  gets a new id. v0.1 backups (schema 1) still import.
+- **Start from item N**, and **Continue from item N** on the results page after
+  finishing early (same shuffle number, same order).
+- **Passage mode**: items are split at punctuation and each part is read on its own.
+  Items can now hold up to 500 characters.
+- **Names for punctuation marks**: replace the built-in spoken names, one per line.
+- **Voices page**: every voice the browser offers, with language and on-device/online;
+  try each and choose one per language. Online voices can only be tried when allowed.
+- **Share a list as a link**: the list travels after `#` (never sent to a server), is
+  previewed, and is added only when asked. Recordings and results are not included.
+- **Keep storage**: Dictalark asks the browser for persistent storage
+  (`navigator.storage.persist()`) and shows whether it was granted. A dismissible backup
+  reminder appears after 20 changes or 14 days (never during a dictation).
+
+### Changed
+
+- The JSON backup file name is now `dictalark-backup-YYYY-MM-DD.json`.
+- Item text, accepted answers and notes may be up to 500 characters (was 120).
+
+### Fixed
+
+- Recording lengths measured by the browser's fractional clock are saved as whole
+  milliseconds, so backups with recordings import again (found by the new e2e test
+  before release).
+
+### Tests
+
+- Property tests: controls (stop, next, previous, repeat, pause) always cancel a reading
+  in progress; nothing is read after stop; a paused dictation never reads by itself.
+- Backup, share-link and base64 parsers refuse hostile input. 18 deliberate mutants
+  (14 unit, 4 browser) were all caught by the new tests.
+
+### Not in this version
+
+- QR codes for share links (a link can be turned into a QR code with any QR tool);
+  class/teacher features; photo (OCR) input; more interface languages.
+
 ## [0.1.0] - 2026-10-08
 
 First release. 首個版本。

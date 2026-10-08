@@ -70,8 +70,15 @@ const rank = (a: VoiceInfo, b: VoiceInfo) =>
 export function pickVoice(
   voices: readonly VoiceInfo[],
   listLang: string,
-  { allowRemote = false, preferredName }: { allowRemote?: boolean; preferredName?: string } = {},
+  {
+    allowRemote = false,
+    preferredName,
+    preferredNames = [],
+  }: { allowRemote?: boolean; preferredName?: string; preferredNames?: readonly string[] } = {},
 ): VoiceChoice {
+  const preferred = new Set(
+    preferredName === undefined ? preferredNames : [preferredName, ...preferredNames],
+  );
   const chain = voiceChain(listLang);
   const usable = voices.filter((v) => allowRemote || v.localService);
   let remoteSkipped = false;
@@ -80,7 +87,7 @@ export function pickVoice(
       const hits = usable.filter((v) => matches(v.lang, p)).sort(rank);
       if (!hits.length && !allowRemote && voices.some((v) => !v.localService && matches(v.lang, p)))
         remoteSkipped = true;
-      if (hits.length) return hits.find((v) => v.name === preferredName) ?? hits[0];
+      if (hits.length) return hits.find((v) => preferred.has(v.name)) ?? hits[0];
     }
     return undefined;
   };

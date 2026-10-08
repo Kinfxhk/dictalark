@@ -7,17 +7,27 @@ import {
   mark,
   MAX_SEED,
   MODES,
+  parsePunctuationNames,
   shuffle,
+  splitPassage,
   validatePlayerConfig,
   type ItemResult,
   type MarkResult,
   type Mode,
   type Op,
 } from '@dictalark/core';
-import { app, findList, recordResults, saveSettings, showBanner, today } from './app';
+import {
+  app,
+  describeError,
+  findList,
+  recordResults,
+  saveSettings,
+  showBanner,
+  today,
+} from './app';
 import { h, newId } from './dom';
 import { voiceStatus } from './editor';
-import { createSession, readAloud, type Session, type SessionItem } from './session';
+import { createSession, readAloud, spokenText, type Session, type SessionItem } from './session';
 import { fillScore, printNow } from './print';
 import { t, type StringKey } from './strings';
 
@@ -58,6 +68,35 @@ function itemsFor(
 
 const randomSeed = () => (crypto.getRandomValues(new Uint32Array(1))[0]! % MAX_SEED) + 1;
 
+/** `?from=3&seed=42&shuffle=1` from "Continue from item 3" (read before the URL is tidied). */
+export function readResume(hash: string): { from?: number; seed?: number; shuffle?: boolean } {
+  const q = new URLSearchParams(hash.split('?')[1] ?? '');
+  const int = (k: string) => {
+    const v = q.get(k);
+    return v !== null && /^\d{1,7}$/.test(v) ? Number(v) : undefined;
+  };
+  const from = int('from');
+  const seed = int('seed');
+  const out: { from?: number; seed?: number; shuffle?: boolean } = {};
+  if (from !== undefined && from >= 1) out.from = from;
+  if (seed !== undefined && seed <= MAX_SEED) out.seed = seed;
+  if (q.has('shuffle')) out.shuffle = q.get('shuffle') === '1';
+  return out;
+}
+
+/**
+ * Passage mode: each item becomes one step per part (split at punctuation). Items read
+ * from a recording stay whole. Without passage mode every item is one step.
+ */
+export function buildSteps(items: readonly SessionItem[], passage: boolean): SessionItem[] {
+  return items.flatMap((s, itemIndex) => {
+    const parts =
+      passage && !app.recordings.has(`${s.listId}/${s.item.id}`) ? splitPassage(spokenText(s)) : [];
+    if (parts.length <= 1) return [{ ...s, itemIndex }];
+    return parts.map((speak, i) => ({ ...s, speak, part: { i, n: parts.length }, itemIndex }));
+  });
+}
+
 function numberField(
   id: string,
   label: StringKey,
@@ -82,7 +121,10 @@ export function renderPractice(view: HTMLElement, target: string): void {
     return;
   }
   const st = app.settings;
-  const seed = randomSeed();
+  const resume = readResume(location.hash);
+  const seed = resume.seed ?? randomSeed();
+  const startFrom = Math.min(resume.from ?? 1, Math.max(1, src.items.length));
+  const shuffleOn = resume.shuffle ?? st.shuffle;
   const modeRadios = MODES.map((m) =>
     h(
       'label',
@@ -120,6 +162,16 @@ export function renderPractice(view: HTMLElement, target: string): void {
             throw new Error('seed');
           const mode = (form.querySelector('input[name=mode]:checked') as HTMLInputElement)
             .value as Mode;
+          const from = num('opt-from');
+          if (!Number.isInteger(from) || from < 1 || from > src.items.length)
+            throw new Error('from');
+          const punctNames = (get('opt-punctnames') as unknown as HTMLTextAreaElement).value;
+          try {
+            parsePunctuationNames(punctNames);
+          } catch (e) {
+            showBanner(describeError(e), 'error');
+            return;
+          }
           Object.assign(st, {
             player,
             rate,
@@ -127,10 +179,18 @@ export function renderPractice(view: HTMLElement, target: string): void {
             shuffle: get('opt-shuffle').checked,
             hideText: get('opt-hide').checked,
             readPunctuation: get('opt-punct').checked,
+            passage: get('opt-passage').checked,
+            punctNames,
           });
           void saveSettings();
-          const items = st.shuffle ? shuffle(src.items, seedValue) : [...src.items];
-          start(view, src.title, items, mode, target);
+          const ordered = st.shuffle ? shuffle(src.items, seedValue) : [...src.items];
+          const items = ordered.slice(from - 1);
+          start(view, src.title, items, mode, target, {
+            offset: from - 1,
+            seed: seedValue,
+            shuffled: st.shuffle,
+            total: ordered.length,
+          });
         } catch {
           showBanner(t('practice.invalid'), 'error');
         }
@@ -143,11 +203,12 @@ export function renderPractice(view: HTMLElement, target: string): void {
       h(
         'label',
         { class: 'check' },
-        h('input', { type: 'checkbox', id: 'opt-shuffle', checked: st.shuffle }),
+        h('input', { type: 'checkbox', id: 'opt-shuffle', checked: shuffleOn }),
         ' ',
         t('practice.shuffle'),
       ),
       numberField('opt-seed', 'practice.seed', seed, 0, MAX_SEED),
+      numberField('opt-from', 'practice.from', startFrom, 1, Math.max(1, src.items.length)),
       numberField('opt-repeats', 'practice.repeats', st.player.repeats, 1, 5),
       numberField('opt-gap', 'practice.gap', st.player.gapSeconds, 0, 20),
       numberField('opt-itemgap', 'practice.itemGap', st.player.itemGapSeconds, 0, 60),
@@ -167,6 +228,26 @@ export function renderPractice(view: HTMLElement, target: string): void {
         ' ',
         t('practice.punct'),
       ),
+      h(
+        'label',
+        { class: 'check' },
+        h('input', { type: 'checkbox', id: 'opt-passage', checked: st.passage }),
+        ' ',
+        t('practice.passage'),
+      ),
+    ),
+    h(
+      'details',
+      { id: 'punct-details' },
+      h('summary', {}, t('practice.punctNames')),
+      h('p', { class: 'meta' }, t('practice.punctNamesHelp')),
+      h('textarea', {
+        id: 'opt-punctnames',
+        rows: 4,
+        value: st.punctNames,
+        placeholder: '！ = 感歎號\n」 = 引號完',
+        'aria-label': t('practice.punctNames'),
+      }),
     ),
     h(
       'div',
@@ -199,16 +280,27 @@ export function renderPractice(view: HTMLElement, target: string): void {
   );
 }
 
+interface RunInfo {
+  /** Items skipped at the start ("start from item N" → N − 1). */
+  offset: number;
+  seed: number;
+  shuffled: boolean;
+  total: number;
+}
+
 function start(
   view: HTMLElement,
   title: string,
   items: SessionItem[],
   mode: Mode,
   target: string,
+  run: RunInfo,
 ): void {
   if (mode === 'cards') return runCards(view, title, items, target);
   const typing = mode === 'typing';
+  const steps = buildSteps(items, app.settings.passage);
   const answers: string[] = items.map(() => '');
+  let stoppedAt: number | undefined;
   let shown = false;
   let shownIndex = -1;
   const counter = h('p', { class: 'counter', id: 'run-counter' });
@@ -251,8 +343,9 @@ function start(
   });
   show.hidden = typing;
   let idx = 0;
+  const itemOf = (step: number) => steps[step]?.itemIndex ?? step;
   const saveAnswer = () => {
-    if (typing) answers[idx] = answer.value;
+    if (typing) answers[itemOf(idx)] = answer.value;
   };
   answer.addEventListener('input', saveAnswer);
   answer.addEventListener('keydown', (e) => {
@@ -268,15 +361,17 @@ function start(
     if (s.index !== idx) {
       saveAnswer();
       idx = s.index;
-      answer.value = answers[idx] ?? '';
-      answer.lang = items[idx]?.lang ?? '';
+      answer.value = answers[itemOf(idx)] ?? '';
+      answer.lang = steps[idx]?.lang ?? '';
     }
-    if (shownIndex !== idx) {
+    if (shownIndex !== itemOf(idx)) {
       shown = false;
-      shownIndex = idx;
+      shownIndex = itemOf(idx);
     }
-    const item = items[idx];
-    counter.textContent = t('run.counter', { i: idx + 1, n: items.length });
+    const item = steps[idx];
+    counter.textContent =
+      t('run.counter', { i: run.offset + itemOf(idx) + 1, n: run.total }) +
+      (item?.part ? ` · ${t('run.part', { i: item.part.i + 1, n: item.part.n })}` : '');
     const secs = Math.ceil(s.remainingMs / 1000);
     status.textContent =
       s.phase === 'countdown'
@@ -290,7 +385,7 @@ function start(
               : '';
     status.dataset.phase = s.phase;
     const hide = typing || (app.settings.hideText && !shown);
-    word.textContent = item ? (hide ? t('run.hidden') : item.item.text) : '';
+    word.textContent = item ? (hide ? t('run.hidden') : (item.speak ?? item.item.text)) : '';
     word.lang = item?.lang ?? '';
     pause.textContent = t(s.phase === 'paused' ? 'run.resume' : 'run.pause');
     pause.setAttribute('aria-pressed', s.phase === 'paused' ? 'true' : 'false');
@@ -299,13 +394,20 @@ function start(
   }
 
   const session: Session = createSession(
-    items,
+    steps,
     app.settings.player,
     () => update(),
     () => {
       saveAnswer();
       current = undefined;
-      renderResults(view, title, items, mode, target, typing ? answers : undefined);
+      const resumeAt =
+        stoppedAt !== undefined && itemOf(stoppedAt) < items.length
+          ? run.offset + itemOf(stoppedAt) + 1
+          : undefined;
+      renderResults(view, title, items, mode, target, typing ? answers : undefined, undefined, {
+        ...run,
+        resumeAt,
+      });
     },
   );
   current = session;
@@ -327,7 +429,15 @@ function start(
         btn('btn-repeat', 'run.repeat', () => session.dispatch({ type: 'repeat' })),
         btn('btn-next', 'run.next', () => session.dispatch({ type: 'next' })),
         show,
-        btn('btn-stop', 'run.stop', () => session.dispatch({ type: 'stop' })),
+        btn('btn-stop', 'run.stop', () => {
+          const p = session.view.state.phase;
+          // Finishing before the last item offers "continue from here" on the results.
+          if (p !== 'done' && p !== 'idle') {
+            const last = session.view.state.index >= steps.length - 1 && p === 'waiting';
+            stoppedAt = last ? undefined : session.view.state.index;
+          }
+          session.dispatch({ type: 'stop' });
+        }),
       ),
     ),
   );
@@ -428,6 +538,7 @@ function renderResults(
   target: string,
   answers?: string[],
   preset?: (ItemResult | undefined)[],
+  run?: RunInfo & { resumeAt?: number | undefined },
 ): void {
   const marks: (ItemResult | undefined)[] = preset ? [...preset] : items.map(() => undefined);
   const autos: (MarkResult | undefined)[] = items.map(() => undefined);
@@ -508,7 +619,7 @@ function renderResults(
       } else details.push(h('span', { class: 'meta' }, `${t('results.yours')}: ${typed}`));
     }
     li.append(
-      h('span', { class: 'meta' }, `${i + 1}.`),
+      h('span', { class: 'meta' }, `${(run?.offset ?? 0) + i + 1}.`),
       h('span', { class: 'expected', lang: s.lang }, s.item.text),
       ...details,
       h('span', { class: 'toolbar' }, right, wrong),
@@ -574,6 +685,17 @@ function renderResults(
           },
           t('print.scoreBtn'),
         ),
+        run?.resumeAt !== undefined
+          ? h(
+              'a',
+              {
+                class: 'file-btn primary',
+                id: 'btn-continue',
+                href: `#/practice/${target}?from=${run.resumeAt}&seed=${run.seed}&shuffle=${run.shuffled ? 1 : 0}`,
+              },
+              t('results.continue', { n: run.resumeAt }),
+            )
+          : null,
         h(
           'a',
           { class: 'file-btn', id: 'btn-again', href: `#/practice/${target}?again=${Date.now()}` },

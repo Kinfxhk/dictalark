@@ -31,6 +31,8 @@ export interface Store {
   /** Delete every recording whose key starts with `${listId}/`. */
   deleteRecordingsOf(listId: string): Promise<void>;
   recordingKeys(): Promise<string[]>;
+  /** Every recording with its key (for a full backup). */
+  allRecordings(): Promise<{ key: string; rec: Recording }[]>;
   recordingBytes(): Promise<number>;
   /** Delete everything Dictalark stored on this device. The store is closed afterwards. */
   wipe(): Promise<void>;
@@ -158,6 +160,12 @@ function wrap(db: IDBDatabase, factory: IDBFactory, name: string): Store {
       tx(db, ['recordings'], 'readonly', async (t) =>
         (await req(t.objectStore('recordings').getAllKeys())).map(String),
       ),
+    allRecordings: () =>
+      tx(db, ['recordings'], 'readonly', async (t) => {
+        const os = t.objectStore('recordings');
+        const [keys, values] = await Promise.all([req(os.getAllKeys()), req(os.getAll())]);
+        return keys.map((k, i) => ({ key: String(k), rec: values[i] as Recording }));
+      }),
     recordingBytes: async () => (await kvGet<number>('recBytes')) ?? 0,
     wipe: async () => {
       db.close();

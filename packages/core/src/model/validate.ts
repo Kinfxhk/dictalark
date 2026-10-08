@@ -126,6 +126,10 @@ export function validateItem(v: unknown, path: string): Item {
     note: validateText(o.note ?? '', `${path}.note`, { allowEmpty: true }),
   };
   if (o.lang !== undefined && o.lang !== '') item.lang = validateLang(o.lang, `${path}.lang`);
+  if (o.say !== undefined && o.say !== '') {
+    const say = validateText(o.say, `${path}.say`, { allowEmpty: true });
+    if (say !== '' && say !== item.text) item.say = say;
+  }
   return item;
 }
 
