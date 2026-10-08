@@ -28,7 +28,10 @@ export type ErrorCode =
   | 'csv-unterminated-quote'
   | 'recording-too-long'
   | 'recording-empty'
-  | 'storage-full';
+  | 'storage-full'
+  | 'recordings-full'
+  | 'mic-denied'
+  | 'mic-unavailable';
 
 export class DictalarkError extends Error {
   readonly code: ErrorCode;

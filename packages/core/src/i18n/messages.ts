@@ -118,6 +118,18 @@ export const ERROR_MESSAGES: Record<ErrorCode, Record<Locale, Msg>> = {
       'Storage on this device is full. Nothing was changed; delete some recordings and retry.',
     'zh-HK': () => '此裝置的儲存空間已滿。資料沒有改動；請刪除部分錄音後再試。',
   },
+  'recordings-full': {
+    en: (p) => `Recordings are limited to ${MB(p.max)} in total. Delete some and retry.`,
+    'zh-HK': (p) => `錄音總容量上限 ${MB(p.max)}，請刪除部分錄音後再試。`,
+  },
+  'mic-denied': {
+    en: () => 'Microphone access was refused. Allow the microphone for this page to record.',
+    'zh-HK': () => '咪高峰權限被拒絕。請允許此網頁使用咪高峰才可錄音。',
+  },
+  'mic-unavailable': {
+    en: () => 'This browser cannot record audio here (no microphone or no recording support).',
+    'zh-HK': () => '此瀏覽器未能在這裏錄音（沒有咪高峰或不支援錄音）。',
+  },
 };
 
 export function errorMessage(e: DictalarkError, locale: Locale): string {

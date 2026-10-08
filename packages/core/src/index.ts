@@ -10,3 +10,4 @@ export * from './mark/index';
 export * from './srs/index';
 export * from './shuffle/index';
 export * from './player/index';
+export * from './speech/index';
